@@ -1,0 +1,2143 @@
+/* =============================================================================
+   Sailing Cloud Portal - Stili globali
+   Layout: sidebar nav (sx) + area schermata (dx)
+   ============================================================================= */
+
+:root {
+    --navy:   #1B3A6B;
+    --orange: #C55A11;
+    --sky:    #BDD7EE;
+    --bg:     #0a0e1a;
+    --panel:  #16213e;
+    --panel-light: #1e2c4f;
+    --muted:  #8a8a8a;
+    --text:   #ffffff;
+    --green:  #00ff88;
+    --red:    #ff4444;
+    --yellow: #ffeb3b;
+    --code:   #2d3748;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+body {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+}
+
+/* =============================================================================
+   SIDEBAR NAVIGAZIONE
+   ============================================================================= */
+
+#main-nav {
+    background: var(--navy);
+    border-right: 2px solid var(--orange);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    gap: 1rem;
+}
+
+.nav-brand {
+    padding: 0 1rem 0.8rem;
+    border-bottom: 1px solid #ffffff20;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.brand-icon { font-size: 1.5rem; }
+.brand-text {
+    color: var(--sky);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.nav-links {
+    list-style: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0 0.5rem;
+}
+
+.nav-footer {
+    padding: 0 0.5rem;
+    border-top: 1px solid #ffffff20;
+    padding-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.nav-btn {
+    background: none;
+    color: var(--text);
+    border: none;
+    padding: 0.7rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.nav-btn:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.nav-btn.active {
+    background: var(--orange);
+    color: white;
+}
+
+.nav-btn.nav-secondary {
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem;
+}
+
+.nav-btn.nav-secondary:hover {
+    color: var(--text);
+}
+
+.nav-ico {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 1.5rem;
+    text-align: center;
+}
+
+/* =============================================================================
+   AREA CONTENUTO - schermate
+   ============================================================================= */
+
+#screens {
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+}
+
+.screen {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.screen.active {
+    display: flex;
+}
+
+.screen-header {
+    padding: 0.9rem 1.5rem;
+    background: var(--panel);
+    border-bottom: 1px solid #00000080;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.screen-header h1 {
+    font-size: 1.3rem;
+    color: var(--sky);
+    font-weight: 600;
+}
+
+.screen-header-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.screen-header-info button,
+.screen-header-info input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.screen-header-info button#btn-refresh {
+    background: var(--orange);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.screen-header-info button#btn-refresh:hover {
+    background: #d56a1f;
+}
+
+.auto-toggle { font-size: 0.8rem; cursor: pointer; }
+
+.boat-select {
+    padding: 0.4rem 0.7rem;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid #ffffff30;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    min-width: 220px;
+}
+
+.boat-select:focus { outline: none; border-color: var(--orange); }
+
+/* =============================================================================
+   SCHERMATA LIVE - layout 3 colonne (lista | mappa | dati)
+   ============================================================================= */
+
+.live-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    overflow: hidden;
+}
+
+#boat-sidebar, #livepanel {
+    background: var(--panel);
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+#boat-sidebar { border-right: 1px solid #00000080; }
+#livepanel    { border-left:  1px solid #00000080; }
+
+aside h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin: 1rem 0 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+aside h2:first-child { margin-top: 0; }
+
+#boat-list { list-style: none; }
+#boat-list li {
+    padding: 0.5rem 0.7rem;
+    margin-bottom: 0.3rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    font-size: 0.9rem;
+}
+#boat-list li:hover { background: rgba(255,255,255,0.1); }
+#boat-list li.active { border-left-color: var(--orange); background: rgba(197,90,17,0.15); }
+#boat-list .name { font-weight: bold; }
+#boat-list .meta { font-size: 0.75rem; color: var(--muted); display: block; margin-top: 0.15rem; }
+#boat-list .online  { color: var(--green); }
+#boat-list .offline { color: var(--muted); }
+
+#boat-detail { font-size: 0.85rem; }
+#boat-detail .row { display: flex; justify-content: space-between; padding: 0.2rem 0; }
+#boat-detail .row .k { color: var(--muted); }
+
+.time-range { display: flex; gap: 4px; }
+.time-range button {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border: 1px solid #00000080;
+    padding: 0.4rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-radius: 3px;
+}
+.time-range button.active { background: var(--orange); border-color: var(--orange); }
+
+/* Map container: posiziona mappa, badge stato e bottone "centra barca" */
+.map-container {
+    position: relative;
+    overflow: hidden;
+}
+.map-container > #map {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+}
+
+#live-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 500;
+    padding: 0.35rem 0.7rem;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.65);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    pointer-events: none;
+}
+#live-status[data-state="idle"]       { background: rgba(80,80,80,0.85); }
+#live-status[data-state="connecting"] { background: rgba(200,140,30,0.85); }
+#live-status[data-state="connected"]  { background: rgba(50,120,200,0.85); }
+#live-status[data-state="streaming"]  { background: rgba(40,160,60,0.85); }
+#live-status[data-state="error"]      { background: rgba(200,50,50,0.9); }
+
+#btn-center-boat {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 500;
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: rgba(0,0,0,0.65);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+#btn-center-boat:hover { background: rgba(0,0,0,0.85); }
+
+.muted { color: var(--muted); font-size: 0.85rem; }
+.small { font-size: 0.8rem; }
+
+.live-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+}
+
+.live-cell {
+    background: rgba(255,255,255,0.05);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+.live-cell .label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.live-cell .value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--text);
+    margin-top: 0.15rem;
+}
+.live-cell .unit {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-left: 0.2rem;
+}
+
+#live-tactical {
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.05);
+}
+#live-tactical.lato-buono { background: rgba(0,255,136,0.15); color: var(--green); }
+#live-tactical.vira       { background: rgba(197,90,17,0.20); color: var(--orange); }
+#live-tactical.layline    { background: rgba(255,235,59,0.20); color: var(--yellow); }
+#live-tactical.ok         { background: rgba(255,255,255,0.05); color: var(--text); }
+
+.leaflet-container { background: var(--bg); }
+.leaflet-tile { filter: brightness(0.7) contrast(1.1); }
+
+/* =============================================================================
+   SCHERMATA REPLAY
+   ============================================================================= */
+
+.replay-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr 380px;
+    overflow: hidden;
+}
+
+.replay-sidebar {
+    background: var(--panel);
+    overflow-y: auto;
+    padding: 1rem;
+    border-right: 1px solid #00000080;
+}
+
+.replay-sidebar h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin: 1rem 0 0.5rem;
+    letter-spacing: 0.05em;
+}
+.replay-sidebar h3:first-child { margin-top: 0; }
+
+#replay-info { font-size: 0.85rem; }
+#replay-info .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #ffffff10;
+}
+#replay-info .row .k { color: var(--muted); }
+#replay-info code {
+    background: var(--code);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    color: var(--yellow);
+}
+
+#replay-tactical {
+    padding: 0.8rem;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 0.5rem;
+}
+#replay-tactical.lato-buono { background: rgba(0,255,136,0.18);  color: var(--green); }
+#replay-tactical.vira       { background: rgba(197,90,17,0.22);  color: var(--orange); }
+#replay-tactical.layline    { background: rgba(255,235,59,0.18); color: var(--yellow); }
+#replay-tactical.ok         { background: rgba(255,255,255,0.05); color: var(--text); }
+
+#replay-mark { font-size: 0.85rem; }
+#replay-mark .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #ffffff10;
+}
+#replay-mark .row .k { color: var(--muted); }
+
+.advice-summary {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.8rem;
+    background: rgba(255,255,255,0.05);
+}
+.advice-bar { transition: flex 0.2s; }
+.advice-bar.advice-lb   { background: #00ff88; }
+.advice-bar.advice-vira { background: #C55A11; }
+.advice-bar.advice-lay  { background: #ffeb3b; }
+.advice-bar.advice-ok   { background: #1B3A6B; }
+
+.advice-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+.advice-legend .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.25rem;
+    vertical-align: middle;
+}
+
+.replay-main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#replay-map {
+    flex: 1;
+    background: var(--bg);
+}
+
+#replay-controls {
+    background: var(--panel);
+    padding: 0.8rem 1rem;
+    border-top: 1px solid #00000080;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.replay-timeline {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+#replay-playpause {
+    background: var(--orange);
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+#replay-slider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    background: #00000060;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+#replay-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--orange);
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+#replay-current-ts {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: var(--sky);
+    font-size: 0.9rem;
+    min-width: 200px;
+    text-align: right;
+}
+
+.replay-speeds {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.replay-speed-btn {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border: 1px solid #00000080;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-radius: 3px;
+}
+.replay-speed-btn.active { background: var(--orange); border-color: var(--orange); }
+
+/* =============================================================================
+   SCHERMATE POLARE / WAYPOINTS
+   ============================================================================= */
+
+.page-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+.empty-state strong { color: var(--text); }
+.empty-state em { color: var(--orange); font-style: normal; }
+
+/* --- Polare: stats e tabella --- */
+.polar-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+}
+
+.stat-cell {
+    background: var(--panel);
+    padding: 0.7rem 0.9rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--orange);
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-cell .lbl {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-cell .val {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 0.15rem;
+}
+
+.stat-cell .sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+}
+
+.polar-table-wrap {
+    overflow: auto;
+    max-height: calc(100vh - 280px);
+    background: rgba(0,0,0,0.2);
+    border-radius: 6px;
+}
+
+.polar-table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    width: 100%;
+}
+
+.polar-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    color: var(--sky);
+    padding: 0.5rem 0.7rem;
+    text-align: center;
+    border-bottom: 2px solid var(--orange);
+    font-weight: 600;
+    z-index: 2;
+}
+
+.polar-table thead th.corner {
+    z-index: 3;
+    left: 0;
+    position: sticky;
+}
+
+.polar-table tbody th {
+    position: sticky;
+    left: 0;
+    background: var(--panel);
+    color: var(--orange);
+    padding: 0.4rem 0.7rem;
+    text-align: right;
+    font-weight: 600;
+    z-index: 1;
+    border-right: 1px solid #ffffff20;
+}
+
+.polar-table td {
+    padding: 0.4rem 0.7rem;
+    text-align: center;
+    color: var(--text);
+    border-bottom: 1px solid #ffffff10;
+    border-right: 1px solid #ffffff05;
+    min-width: 56px;
+}
+
+.polar-table td.empty {
+    color: var(--muted);
+    background: rgba(0,0,0,0.4);
+}
+
+/* --- Waypoints: tabella + mappa --- */
+.wpt-view-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    height: calc(100vh - 200px);
+}
+
+.wpt-view-grid > div {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.wpt-view-grid h3 {
+    font-size: 0.9rem;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+    flex-shrink: 0;
+}
+
+.wpt-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9rem;
+    background: var(--panel);
+    border-radius: 6px;
+    overflow: auto;
+    flex: 1;
+}
+
+.wpt-table thead th {
+    background: var(--navy);
+    color: var(--sky);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--orange);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    position: sticky;
+    top: 0;
+}
+
+.wpt-table tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.wpt-table tbody tr:hover { background: rgba(197,90,17,0.10); }
+.wpt-table tbody tr.selected { background: rgba(197,90,17,0.25); }
+
+.wpt-table tbody td {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid #ffffff10;
+    color: var(--text);
+}
+
+.wpt-table tbody td code {
+    background: rgba(255,255,255,0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: var(--yellow);
+}
+
+.side-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.side-port { background: rgba(255,68,68,0.18); color: #ff8080; }
+.side-starboard { background: rgba(0,255,136,0.18); color: var(--green); }
+
+.wpt-mini-map {
+    flex: 1;
+    background: var(--bg);
+    border-radius: 6px;
+    overflow: hidden;
+    min-height: 300px;
+}
+
+.wpt-num-label {
+    background: none !important;
+    border: none !important;
+}
+
+.wpt-num {
+    background: var(--navy);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* =============================================================================
+   CONFIG OVERLAY
+   ============================================================================= */
+
+#config-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.replay-header {
+    background: var(--navy);
+    padding: 0.6rem 1.2rem;
+    border-bottom: 2px solid var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.replay-header h2 {
+    color: var(--sky);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.config-body {
+    flex: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    width: 100%;
+}
+
+.config-section {
+    background: var(--panel);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--orange);
+}
+
+.config-section h3 {
+    color: var(--orange);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.7rem;
+}
+
+.config-section .small {
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.config-section a {
+    color: var(--orange);
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0.6rem 0;
+    flex-wrap: wrap;
+}
+
+.config-row label {
+    flex: 0 0 130px;
+    font-size: 0.88rem;
+    color: var(--muted);
+}
+
+.config-row input[type="text"],
+.config-row input[type="password"],
+.config-row select,
+.config-row input[type="file"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem 0.7rem;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid #ffffff20;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.config-row input[type="file"] { padding: 0.3rem; }
+.config-row input:focus, .config-row select:focus {
+    outline: none;
+    border-color: var(--orange);
+}
+
+.config-status-box {
+    padding: 0.6rem 0.9rem;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    font-size: 0.88rem;
+    margin-bottom: 0.6rem;
+}
+
+.status-ok    { color: var(--green); font-weight: 600; }
+.status-empty { color: var(--muted); }
+
+.config-url-box {
+    background: rgba(0,0,0,0.3);
+    padding: 0.8rem;
+    border-radius: 4px;
+    margin-top: 0.6rem;
+    border-left: 3px solid var(--green);
+}
+
+.config-url-box label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.url-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.url-row code {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    padding: 0.5rem 0.7rem;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.78rem;
+    color: var(--yellow);
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.btn-primary, .btn-secondary, .btn-copy {
+    padding: 0.5rem 0.9rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: #d56a1f; }
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    border: 1px solid #ffffff30;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.18); }
+
+.btn-copy {
+    background: var(--navy);
+    color: var(--sky);
+    border: 1px solid var(--navy);
+}
+.btn-copy:hover { background: #2a4a80; }
+.btn-copy.btn-copied {
+    background: var(--green);
+    color: var(--bg);
+    border-color: var(--green);
+}
+
+/* =============================================================================
+   RESPONSIVE - per tablet/mobile
+   ============================================================================= */
+
+@media (max-width: 900px) {
+    body { grid-template-columns: 60px 1fr; }
+    .nav-lbl { display: none; }
+    .brand-text { display: none; }
+    .nav-brand { padding: 0 0.5rem 0.8rem; justify-content: center; }
+    .nav-btn { justify-content: center; padding: 0.7rem 0.3rem; }
+    .live-layout { grid-template-columns: 200px 1fr 250px; }
+    .wpt-view-grid { grid-template-columns: 1fr; height: auto; }
+    /* Sotto 1280px togliamo il pannello analisi laterale e lo
+       mostriamo sotto la mappa come riga full-width. */
+    .replay-body {
+        grid-template-columns: 240px 1fr;
+        grid-template-rows: 1fr auto;
+    }
+    .replay-analysis {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-height: 280px;
+        border-left: none;
+        border-top: 1px solid #00000080;
+    }
+}
+
+@media (max-width: 600px) {
+    .live-layout { grid-template-columns: 1fr; }
+    #boat-sidebar, #livepanel { display: none; }
+    .replay-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+    .replay-sidebar { max-height: 200px; grid-row: 1; }
+    .replay-analysis { grid-row: 3; max-height: 240px; }
+    .polar-stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* =============================================================================
+   JSON EDITOR OVERLAY
+   ============================================================================= */
+
+#json-editor-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1100;
+    display: none;
+    flex-direction: column;
+}
+
+.je-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.5rem;
+    gap: 0.6rem;
+    overflow: hidden;
+}
+
+.je-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.je-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#je-textarea {
+    flex: 1;
+    width: 100%;
+    background: var(--code, #1a1f2e);
+    color: var(--text);
+    border: 1px solid #ffffff20;
+    border-radius: 6px;
+    padding: 1rem;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    tab-size: 2;
+    white-space: pre;
+    overflow: auto;
+}
+
+#je-textarea:focus {
+    border-color: var(--orange);
+}
+
+#je-textarea:disabled {
+    color: var(--muted);
+    background: rgba(0,0,0,0.3);
+    cursor: wait;
+}
+
+.je-status {
+    padding: 0.6rem 0.9rem;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.88rem;
+    min-height: 2rem;
+    flex-shrink: 0;
+}
+
+.je-status-ok {
+    background: rgba(0,255,136,0.10);
+    color: var(--green);
+    border-left: 3px solid var(--green);
+}
+
+.je-status-err {
+    background: rgba(255,68,68,0.12);
+    color: #ff8080;
+    border-left: 3px solid var(--red);
+}
+
+.je-status-info {
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border-left: 3px solid var(--muted);
+}
+
+@media (max-width: 700px) {
+    .je-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #je-textarea {
+        font-size: 0.85rem;
+    }
+}
+
+/* =============================================================================
+   PANNELLO ANALISI REPLAY (laterale destro nella schermata Replay)
+   Contiene 5 tab popolate da analysis.js dopo il caricamento della traccia.
+   ============================================================================= */
+.replay-analysis {
+    background: var(--panel);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #00000080;
+}
+
+.ra-tabs {
+    display: flex;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.35);
+    border-bottom: 2px solid #00000080;
+    padding: 0;
+    gap: 1px;  /* sottile separatore tra tab */
+}
+
+.ra-tab {
+    flex: 1;
+    min-width: 0;  /* permette al flex di restringere sotto il content */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.7rem 0.4rem 0.6rem;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-top: 3px solid transparent;  /* indicatore attivo (in alto) */
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: inherit;
+    position: relative;
+    /* Disabilito user-select per evitare il "flash" testo blu durante click rapidi */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.ra-tab-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+.ra-tab-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.ra-tab:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+}
+.ra-tab:hover .ra-tab-icon { opacity: 1; }
+
+.ra-tab.active {
+    color: var(--orange);
+    background: rgba(232, 132, 64, 0.10);
+    border-top-color: var(--orange);
+}
+.ra-tab.active .ra-tab-icon {
+    opacity: 1;
+    /* Leggera saturazione per far risaltare l'icona attiva */
+    filter: saturate(1.2);
+}
+
+.ra-tab:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: -2px;
+}
+
+.ra-tab:active {
+    transform: scale(0.97);
+    transition: transform 0.05s;
+}
+
+/* Su schermi piccoli (sotto 600px) nascondo il testo e tengo solo l'icona,
+   con tooltip nativo (attributo title gia' presente) */
+@media (max-width: 600px) {
+    .ra-tab-label { display: none; }
+    .ra-tab { padding: 0.6rem 0.3rem; }
+    .ra-tab-icon { font-size: 1.4rem; }
+}
+
+.ra-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    text-align: center;
+}
+
+.ra-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+}
+
+/* Riepilogo: griglia di KPI */
+.ra-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+.ra-kpi {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 0.55rem 0.6rem;
+}
+.ra-kpi-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.15rem;
+}
+.ra-kpi-value {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.ra-kpi-value.good { color: #66dd99; }
+.ra-kpi-value.warn { color: #f0c040; }
+.ra-kpi-value.bad  { color: #e08070; }
+.ra-kpi-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+}
+.ra-section-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--orange);
+    margin: 0.7rem 0 0.4rem;
+    font-weight: 600;
+}
+
+/* Tabelle leg/manovre */
+.ra-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.ra-table th, .ra-table td {
+    padding: 0.35rem 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    text-align: right;
+    white-space: nowrap;
+}
+.ra-table th {
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    text-align: right;
+}
+.ra-table th:first-child, .ra-table td:first-child {
+    text-align: left;
+}
+.ra-table tr.current {
+    background: rgba(232, 132, 64, 0.15);
+}
+.ra-table tr.clickable { cursor: pointer; }
+.ra-table tr.clickable:hover { background: rgba(255,255,255,0.05); }
+
+.ra-badge {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.ra-badge-tack { background: rgba(102, 221, 153, 0.2); color: #66dd99; }
+.ra-badge-gybe { background: rgba(240, 192, 64, 0.2); color: #f0c040; }
+.ra-badge-port { background: rgba(224, 64, 64, 0.2); color: #ff7060; }
+.ra-badge-stbd { background: rgba(64, 192, 64, 0.2); color: #66dd99; }
+
+/* Placeholder dentro un tab quando non c'e' contenuto da mostrare
+   (es. analisi non ancora costruita, o tab non implementato). */
+.ra-placeholder {
+    padding: 2rem 1rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.ra-placeholder p {
+    margin: 0;
+    line-height: 1.5;
+    max-width: 280px;
+}
+
+/* =============================================================================
+   TOOLBAR MAPPA REPLAY (toggle Layline / Lift-Header / Boe)
+   ============================================================================= */
+.replay-map-toolbar {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    background: rgba(20, 30, 50, 0.92);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.replay-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text);
+    user-select: none;
+}
+.replay-toggle input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--orange);
+    cursor: pointer;
+}
+.replay-toggle:hover { color: var(--orange); }
+
+/* La mappa replay deve avere position:relative perche' il toolbar e' absolute */
+.replay-main { position: relative; }
+
+/* =============================================================================
+   STRIP CHART CONTAINER
+   ============================================================================= */
+.sc-wrap canvas { display: block; }
+
+/* Bottone export PDF nel pannello analisi */
+.ra-export-btn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.7rem;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.ra-export-btn:hover {
+    background: #d97a2c;
+}
+.ra-export-btn:disabled {
+    background: var(--muted);
+    cursor: not-allowed;
+}
+
+/* Sezione "vento e distribuzione" sotto i KPI nel tab riepilogo */
+.ra-rose-heatmap {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.ra-mini-section {
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+.ra-mini-section-title {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+}
+.ra-mini-section canvas { display: block; margin: 0 auto; }
+
+/* =============================================================================
+   SCHERMATA METEO
+   Layout principale (.weather-body) e' definito piu' sotto, vicino al CSS
+   della sidebar. Qui solo gli stili dei contenuti dentro il main.
+   ============================================================================= */
+.weather-section-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--orange);
+    margin: 1.2rem 0 0.7rem;
+    font-weight: 600;
+}
+.weather-section-title:first-child {
+    margin-top: 0;
+}
+
+/* Cards riassuntive lungo la rotta (+6/+12/+24/+48h) */
+.weather-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+.weather-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.weather-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--orange);
+}
+.weather-card .wc-horizon {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--orange);
+    line-height: 1;
+}
+.weather-card .wc-time {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.6rem;
+}
+.weather-card .wc-arrow {
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--orange);
+    opacity: 0.8;
+    text-align: center;
+    margin: 0.3rem 0;
+    transition: transform 0.3s;
+}
+.weather-card .wc-wind {
+    text-align: center;
+    margin-top: 0.4rem;
+}
+.weather-card .wc-speed {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.weather-card .wc-dir {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+.weather-card .wc-gust {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+}
+.weather-card .wc-wave,
+.weather-card .wc-precip {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--text);
+}
+
+/* Colorazione card per intensita' di vento (Beaufort-like) */
+.weather-card.wind-calm      { background: linear-gradient(135deg, rgba(120,160,200,0.08), rgba(255,255,255,0.04)); }
+.weather-card.wind-light     { background: linear-gradient(135deg, rgba(120,200,160,0.10), rgba(255,255,255,0.04)); }
+.weather-card.wind-mod       { background: linear-gradient(135deg, rgba(150,220,120,0.12), rgba(255,255,255,0.04)); }
+.weather-card.wind-fresh     { background: linear-gradient(135deg, rgba(220,200,80,0.14), rgba(255,255,255,0.04)); }
+.weather-card.wind-strong    { background: linear-gradient(135deg, rgba(240,160,60,0.18), rgba(255,255,255,0.04)); border-color: rgba(240,160,60,0.4); }
+.weather-card.wind-near-gale { background: linear-gradient(135deg, rgba(220,80,60,0.22), rgba(255,255,255,0.04)); border-color: rgba(220,80,60,0.5); }
+.weather-card.wind-gale      { background: linear-gradient(135deg, rgba(180,40,40,0.30), rgba(0,0,0,0.2)); border-color: rgba(180,40,40,0.6); }
+
+/* Tabella per waypoint */
+.weather-table-wrap {
+    overflow-x: auto;
+    margin-top: 0.5rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    padding: 0.5rem;
+}
+.weather-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+.weather-table th, .weather-table td {
+    padding: 0.45rem 0.7rem;
+    text-align: right;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.weather-table th {
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    text-align: right;
+    border-bottom: 2px solid rgba(255,255,255,0.12);
+}
+.weather-table th:first-child,
+.weather-table td:first-child,
+.weather-table .wt-wpname {
+    text-align: left;
+}
+.weather-table .wt-wpname {
+    font-weight: 600;
+    color: var(--text);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    vertical-align: middle;
+}
+/* Colorazione righe per intensita' di vento (versione attenuata) */
+.weather-table tr.wind-fresh     { background: rgba(220,200,80,0.06); }
+.weather-table tr.wind-strong    { background: rgba(240,160,60,0.10); }
+.weather-table tr.wind-near-gale { background: rgba(220,80,60,0.12); }
+.weather-table tr.wind-gale      { background: rgba(180,40,40,0.18); }
+
+.weather-meta {
+    margin-top: 1.2rem;
+    padding: 0.7rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 4px;
+}
+
+@media (max-width: 700px) {
+    .weather-cards { grid-template-columns: 1fr 1fr; }
+    .weather-card .wc-speed { font-size: 1.3rem; }
+}
+@media (max-width: 480px) {
+    .weather-cards { grid-template-columns: 1fr; }
+}
+
+/* =============================================================================
+   Diagramma polare (canvas) sotto la tabella nella schermata Polari
+   ============================================================================= */
+.polar-section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin: 1.5rem 0 0.7rem;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+.polar-chart-wrap {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Niente min-height fisso: il canvas dentro si adatta a 100% larghezza
+       parent (cap a 1100px lato JS), e il wrapper cresce di conseguenza. */
+}
+.polar-chart-wrap canvas {
+    display: block;
+    max-width: 100%;
+}
+
+/* =============================================================================
+   METEO turno 2: alert, mappa+slider, meteogram, auto-refresh
+   ============================================================================= */
+
+/* Toggle auto-refresh nell'header */
+.weather-autorefresh-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    user-select: none;
+    margin-left: 0.5rem;
+}
+.weather-autorefresh-toggle input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--orange);
+    cursor: pointer;
+}
+
+/* Badge ALERT su card e righe quando una soglia e' superata */
+.weather-card.alert {
+    border-color: #e0533a;
+    box-shadow: 0 0 0 1px #e0533a inset;
+}
+.weather-card.alert::after {
+    content: "⚠ ALERT";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: #e0533a;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+}
+.weather-table tr.alert {
+    background: rgba(224, 83, 58, 0.16) !important;
+}
+.weather-table tr.alert td:first-child::before {
+    content: "⚠ ";
+    color: #e0533a;
+    font-weight: bold;
+}
+
+/* Mappa + time slider */
+.weather-map-wrap {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+#weather-map {
+    width: 100%;
+    height: 540px;
+    background: #1a2030;
+}
+.weather-time-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.8rem 1rem;
+    background: rgba(0,0,0,0.3);
+}
+#weather-time-slider {
+    width: 100%;
+    accent-color: var(--orange);
+}
+.weather-time-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+#weather-time-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--orange);
+}
+
+/* Wind barbs (svg dentro divIcon Leaflet) - styling default */
+.wind-barb-icon { background: transparent !important; border: none !important; }
+
+/* Meteogram per waypoint */
+.weather-meteograms {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+.weather-meteogram {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;  /* per overlay hover canvas (cursor verticale) */
+    overflow: hidden;
+}
+.weather-meteogram-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.weather-meteogram-title .muted { font-size: 0.75rem; }
+.weather-meteogram canvas {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    cursor: pointer;
+}
+.weather-meteogram-row {
+    margin-bottom: 0.4rem;
+}
+.weather-meteogram-row-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    justify-content: space-between;
+}
+.weather-meteogram-row-label .v { color: var(--text); font-weight: 600; }
+
+/* Bottone export PDF */
+.weather-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+@media (max-width: 700px) {
+    #weather-map { height: 360px; }
+    .weather-meteograms { grid-template-columns: 1fr; }
+}
+
+/* =============================================================================
+   SAIL CROSSOVER (turno sail crossover)
+   ============================================================================= */
+
+/* Tabella Polari: il bordo colorato sulle celle e' fatto via inline style
+   (box-shadow inset) gia' nel JS, qui solo la legenda */
+.polar-sails-legend {
+    margin-top: 1.2rem;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.sail-legend-title {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+.sail-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem 1.5rem;
+}
+.sail-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+.sail-legend-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+.sail-legend-label {
+    color: var(--text);
+}
+
+/* Replay: pillola "Vela suggerita" sotto i dati al cursore */
+.replay-sail {
+    margin: 0.5rem 0 0.8rem;
+    padding: 0.5rem 0.7rem;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    border-left: 4px solid var(--orange);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+.replay-sail .sail-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.4);
+    flex-shrink: 0;
+}
+.replay-sail .sail-label {
+    color: var(--text);
+}
+
+/* Card meteo: dots + lista vele utilizzabili al TWS previsto */
+.weather-card .wc-sails {
+    margin-top: 0.5rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+.weather-card .wc-sail-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.4);
+    flex-shrink: 0;
+}
+.weather-card .wc-sails-text {
+    margin-left: 0.2rem;
+}
+
+/* =============================================================================
+   FIX SELECT DROPDOWN: testo bianco su sfondo bianco era illeggibile.
+   I tag <option> nei browser usano i colori di sistema del SO, NON i colori
+   CSS della pagina, quindi su tema chiaro venivano fuori bianchi/bianchi.
+   Forziamo sfondo grigio chiaro + testo scuro per garantire leggibilita'
+   in qualsiasi combinazione SO/browser/tema.
+   ============================================================================= */
+select {
+    background-color: #2a3040;
+    color: #e8e8e8;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+select:hover {
+    border-color: var(--orange);
+}
+select:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 2px rgba(255, 128, 0, 0.2);
+}
+/* Le option dentro i select: forziamo grigio chiaro su scuro per
+   garantire contrasto nel dropdown aperto. */
+select option {
+    background-color: #d8d8d8;
+    color: #1a1a1a;
+    padding: 0.3rem 0.5rem;
+}
+select option:checked,
+select option:hover {
+    background-color: #ffae5c;  /* arancione tema */
+    color: #1a1a1a;
+}
+/* Disabled */
+select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =============================================================================
+   TAB AVANZATE (replay): wind shifts, overstand, ranking, sail usage
+   Il pannello base .ra-panel ha gia' flex:1, overflow-y:auto e padding.
+   Qui aggiungo solo lo stile dei contenuti, non sovrascrivo il layout.
+   ============================================================================= */
+#ra-advanced .adv-section {
+    margin-bottom: 1.2rem;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+}
+#ra-advanced .adv-h {
+    font-size: 0.85rem;
+    color: var(--orange);
+    margin: 0 0 0.6rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+#ra-advanced .adv-summary {
+    margin: 0 0 0.6rem 0;
+    font-size: 0.88rem;
+    color: var(--text);
+}
+#ra-advanced .adv-summary strong {
+    color: var(--orange);
+}
+#ra-advanced .adv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+#ra-advanced .adv-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0.3rem 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+}
+#ra-advanced .adv-table td {
+    padding: 0.3rem 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+#ra-advanced .adv-table tr:hover {
+    background: rgba(255,255,255,0.04);
+}
+#ra-advanced .adv-table tr.rank-good {
+    border-left: 3px solid #5fb874;
+}
+#ra-advanced .adv-table tr.rank-bad {
+    border-left: 3px solid #e0533a;
+}
+
+/* =============================================================================
+   SCHERMATA METEO: sidebar preferenze (a sinistra) + main content (destra)
+   ============================================================================= */
+.weather-body {
+    /* sovrascrivo eventuali stili precedenti per usare flex layout */
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;  /* il padding va sulle due colonne */
+    overflow: hidden;
+    height: 100%;
+}
+.weather-sidebar {
+    /* Sidebar a DESTRA: l'HTML ha la sidebar prima del main, ma con order=2
+       la sposto visualmente a destra. Cosi' non devo riordinare l'HTML. */
+    order: 2;
+    flex: 0 0 280px;
+    background: rgba(0, 0, 0, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1rem 1rem 1.5rem;
+    overflow-y: auto;
+    font-size: 0.85rem;
+}
+.weather-sidebar .ws-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--orange);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.weather-sidebar .ws-group {
+    margin-bottom: 1.2rem;
+}
+.weather-sidebar .ws-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+.weather-sidebar .ws-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.weather-sidebar .ws-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.85rem;
+}
+.weather-sidebar .ws-check input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--orange);
+}
+.weather-sidebar .ws-thr-row {
+    display: grid;
+    grid-template-columns: 1fr 70px auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.82rem;
+}
+.weather-sidebar .ws-thr-row .ws-thr {
+    width: 100%;
+    box-sizing: border-box;
+}
+.weather-sidebar .ws-footer {
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* Main content (a sinistra della sidebar - a sinistra perche' sidebar a destra) */
+.weather-main {
+    order: 1;
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.2rem;
+    min-width: 0;  /* fondamentale: senza, il flex item con tabelle larghe
+                      forza la sidebar a restringersi ignorando flex-basis */
+}
+
+/* Su mobile la sidebar va sotto al main e diventa scrollabile.
+   Con order=2 sulla sidebar, in flex-direction column finisce naturalmente
+   sotto. Bordo top invece che left/right. */
+@media (max-width: 900px) {
+    .weather-body {
+        flex-direction: column;
+    }
+    .weather-sidebar {
+        flex: 0 0 auto;
+        max-height: 280px;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* =============================================================================
+   Highlight riga tabella meteo quando si clicca un marker mappa
+   + label nome waypoint sempre visibile sulla mappa
+   ============================================================================= */
+.weather-table tr.wt-highlight {
+    background: rgba(255, 174, 92, 0.25) !important;
+    box-shadow: inset 4px 0 0 var(--orange);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+.weather-table tr.wt-highlight .wt-wpname {
+    color: var(--orange) !important;
+    font-weight: 700;
+}
+
+/* Label waypoint sulla mappa: sempre visibile, vicino al marker */
+.weather-wp-label {
+    background: transparent !important;
+    border: none !important;
+    pointer-events: none;
+}
+.weather-wp-label span {
+    display: inline-block;
+    background: rgba(20, 25, 40, 0.85);
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 174, 92, 0.5);
+}
+
+/* =============================================================================
+   LOGIN SCREEN: overlay full-screen mostrato se non autenticato
+   ============================================================================= */
+#login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0a1628 0%, #1a2540 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+.login-box {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+.login-brand .brand-icon { font-size: 1.6rem; }
+.login-brand .brand-text { color: var(--orange); }
+.login-title {
+    margin: 0.5rem 0 1.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--muted);
+}
+.login-label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0.8rem 0 0.3rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.login-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.8rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1rem;
+    font-family: inherit;
+}
+.login-input:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 2px rgba(255, 128, 0, 0.2);
+}
+.login-error {
+    color: #e0533a;
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+    min-height: 1.2em;
+}
+.login-submit {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.login-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.login-footer {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+/* User info nella sidebar nav */
+.user-info-slot {
+    padding: 0.5rem 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+.user-info-slot .user-name {
+    font-weight: 600;
+    color: var(--orange);
+    word-break: break-word;
+    flex: 1;
+}

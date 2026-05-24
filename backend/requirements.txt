@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+gunicorn==23.0.0
+pydantic==2.9.2
+pydantic-settings==2.5.2
+pymssql==2.3.1
+azure-storage-blob>=12.19.0
+azure-eventhub>=5.11.5
+python-dotenv==1.0.1
+sse-starlette>=2.1.0

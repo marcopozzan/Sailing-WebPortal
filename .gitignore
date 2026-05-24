@@ -1,0 +1,23 @@
+# File con segreti (password DB, connection string blob, admin token)
+# Mai committare in git: tienilo solo in locale.
+# La versione di esempio (.env.example) e' committabile perche' non
+# contiene segreti veri.
+.env
+*.env
+.env.*
+!.env.example
+
+# Cartelle temporanee Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# File di output diagnostici
+deploy-output.txt
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp

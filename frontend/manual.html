@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sailing Racing — Manuale Utente</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <h1>Sailing Racing — Manuale Utente</h1>
+            <a href="index.html" class="back-link">← Torna al portale</a>
+        </div>
+    </header>
+
+    <nav id="toc">
+        <h2>Indice</h2>
+        <ol>
+            <li><a href="#intro">Introduzione</a></li>
+            <li><a href="#installazione">Installazione e avvio</a></li>
+            <li><a href="#layout">Layout generale</a></li>
+            <li><a href="#nav">Schermata Nav (Navigazione)</a></li>
+            <li><a href="#start">Schermata Start (Partenza)</a></li>
+            <li><a href="#lay">Schermata Lay (LayLine)</a></li>
+            <li><a href="#wpt">Schermata WPT (Waypoints)</a></li>
+            <li><a href="#polar">Schermata Polar (Polari)</a></li>
+            <li><a href="#log">Schermata Log (Logging)</a></li>
+            <li><a href="#set">Schermata Set (Impostazioni)</a></li>
+            <li><a href="#tactical">Logica del consiglio tattico</a></li>
+            <li><a href="#cloud">Cloud upload e portale</a></li>
+            <li><a href="#files">File e cartelle dati</a></li>
+            <li><a href="#troubleshooting">Risoluzione problemi</a></li>
+        </ol>
+    </nav>
+
+    <main>
+
+        <section id="intro">
+            <h2>1. Introduzione</h2>
+            <p>
+                <strong>Sailing Racing</strong> è un'app Android per tablet che riceve dati di navigazione
+                dal sistema NMEA di bordo (via TCP) e li elabora in tempo reale per fornire indicazioni
+                tattiche durante la regata: target di velocità da polare, consiglio di virata basato sui
+                salti di vento, geometria di partenza e layline alle boe.
+            </p>
+            <p>
+                L'app è pensata per <strong>l'orientamento landscape</strong> su tablet medio-grande (≥10").
+                Tutti i dati arrivano da uno strumento (chartplotter, multiplexer, processore vento, GPS)
+                che esponga uno stream NMEA-0183 su una porta TCP.
+            </p>
+            <div class="callout">
+                <strong>Cosa non fa:</strong> non sostituisce il chartplotter; non disegna mappe nautiche;
+                non riceve AIS; non controlla l'autopilota. È uno strumento <em>tattico</em> e di logging.
+            </div>
+        </section>
+
+        <section id="installazione">
+            <h2>2. Installazione e avvio</h2>
+            <h3>2.1 Installazione APK</h3>
+            <p>
+                Installa l'APK sul tablet abilitando le sorgenti sconosciute nelle impostazioni Android
+                (<em>Sicurezza → Origini sconosciute</em> oppure il prompt al primo avvio).
+            </p>
+            <h3>2.2 Primo avvio</h3>
+            <p>
+                Al primo avvio:
+            </p>
+            <ul>
+                <li>L'app si apre direttamente in <strong>landscape</strong>; se vedi la grafica tagliata
+                    a metà, ruota il tablet di 90° (alcuni device emettono il primo evento di rotazione
+                    dopo lo splash screen).</li>
+                <li>Viene creata la cartella dati nella sandbox dell'app:
+                    <code>Android/data/it.regolofarm.soar/files/</code>.
+                    Qui finiscono il config, le polari, i log e il file dei waypoint.</li>
+                <li>Si apre la schermata <strong>Nav</strong>. Senza connessione NMEA tutti i campi sono
+                    "--": è normale.</li>
+            </ul>
+            <h3>2.3 Connessione NMEA</h3>
+            <p>
+                Vai sulla schermata <strong>Set</strong>, modifica <em>IP Server</em> e <em>Porta</em>
+                con i parametri del tuo multiplexer/processore (esempio: <code>192.168.1.100:10110</code>),
+                tap <em>Salva configurazione</em>, poi <em>Connetti</em>.
+                In sidebar la scritta <em>Offline</em> diventa <em>Online</em> appena arrivano frame validi.
+            </p>
+        </section>
+
+        <section id="layout">
+            <h2>3. Layout generale</h2>
+            <p>
+                Tutte le schermate condividono la stessa struttura:
+            </p>
+            <ul>
+                <li><strong>Sidebar a sinistra</strong> (155&nbsp;dp): pulsanti di navigazione tra le 7
+                    schermate (<em>Nav</em>, <em>Start</em>, <em>Lay</em>, <em>WPT</em>, <em>Polar</em>,
+                    <em>Log</em>, <em>Set</em>) e indicatore stato connessione (Online/Offline).</li>
+                <li><strong>Titlebar in alto</strong> (60&nbsp;dp): nome schermata + indicatore GPS
+                    a destra (lat/lon o "GPS --" se non c'è fix).</li>
+                <li><strong>Body</strong>: contenuto specifico di ogni schermata, sempre dimensionato
+                    per riempire tutto lo spazio rimanente senza scroll.</li>
+            </ul>
+            <p>
+                I cambi di schermata sono istantanei (nessuna animazione di caricamento). Lo stato
+                interno (es. timer di partenza, selezione waypoint) viene mantenuto durante la sessione.
+            </p>
+        </section>
+
+        <section id="nav">
+            <h2>4. Schermata Nav (Navigazione)</h2>
+            <p>
+                È la schermata principale, quella che terrai aperta in regata. Mostra in un colpo
+                d'occhio velocità, performance, vento, profondità e dati boa.
+            </p>
+            <h3>4.1 Riga superiore (3 caselle grandi)</h3>
+            <ul>
+                <li><strong>STW</strong>: velocità barca (Speed Through Water) in knots.
+                    In assenza di log barca usa la SOG (GPS).</li>
+                <li><strong>TARGET</strong>: velocità polare attesa per le condizioni correnti
+                    (TWS + TWA). Verde se stai andando ≥ 95% del target, arancio altrimenti.
+                    Se non c'è polare caricata, mostra un valore stimato (110% della STW corrente).</li>
+                <li><strong>VMG</strong>: Velocity Made Good verso il vento.
+                    Verde se positivo (stai guadagnando vento), rosso se negativo.</li>
+            </ul>
+
+            <h3>4.2 Bussola (sinistra)</h3>
+            <p>
+                Cerchio di prua con indicatore vento vero (TWA). La rosa ruota in base all'heading
+                della barca. Sotto la bussola, sulla sinistra, l'<strong>HDG</strong> in cifre grandi.
+            </p>
+
+            <h3>4.3 Consiglio tattico (a destra di HDG)</h3>
+            <p>
+                È la label che dice <em>cosa fare adesso</em>:
+            </p>
+            <ul>
+                <li><span class="badge badge-green">LATO BUONO +N°</span> — sei "lifted",
+                    il vento ti sta favorendo sulla mura corrente. Continua dritto.</li>
+                <li><span class="badge badge-orange">VIRA ±N°</span> — sei "headed",
+                    il vento sfavorisce. Virare ora ti porta sulla mura migliore.</li>
+                <li><span class="badge badge-yellow">VIRA (layline)</span> — sei sul layline
+                    geometrico verso la boa attiva. Virare adesso ti porta in linea retta a boa.</li>
+                <li><span class="badge badge-white">OK ±N°</span> — situazione neutra,
+                    nessuna azione raccomandata.</li>
+                <li><span class="badge badge-muted">—</span> — non in bolina (|TWA| > 60°)
+                    o storico TWD insufficiente.</li>
+            </ul>
+            <p>
+                Vedi <a href="#tactical">§11</a> per la logica completa.
+            </p>
+
+            <h3>4.4 Griglia 3×3 (destra)</h3>
+            <p>Nove caselle dati in tre righe:</p>
+            <ul>
+                <li><strong>TWS</strong> / <strong>TWA</strong> / <strong>DEPTH</strong> —
+                    velocità vento vero, angolo vento vero (signed), profondità sotto chiglia
+                    (rossa se &lt; 3 m).</li>
+                <li><strong>AWA</strong> / <strong>AWS</strong> / <strong>COG</strong> —
+                    angolo vento apparente, velocità vento apparente, rotta sopra terra (GPS).</li>
+                <li><strong>BRG BOA</strong> / <strong>DIST</strong> / <strong>ETA</strong> —
+                    rilevamento alla boa attiva, distanza in NM, tempo stimato in minuti
+                    (calcolato come distanza ÷ STW corrente).</li>
+            </ul>
+            <p>
+                Sotto la griglia, una riga di stato della <strong>polare</strong>: nome barca,
+                target attuale, percentuale STW/target.
+            </p>
+        </section>
+
+        <section id="start">
+            <h2>5. Schermata Start (Partenza)</h2>
+            <p>
+                Strumenti per la procedura di partenza in regata.
+            </p>
+
+            <h3>5.1 Conto alla rovescia (sinistra)</h3>
+            <ul>
+                <li><strong>Display tempo</strong>: cifre molto grandi (verde &gt; 60s, rosso ≤ 60s,
+                    rosso fisso a 0:00).</li>
+                <li><strong>START / STOP / RESET</strong>: avvia, pausa o riporta al valore preimpostato
+                    (default 5 minuti).</li>
+                <li><strong>Preset</strong>: <em>1m / 3m / 5m / 10m</em> per impostare velocemente
+                    procedure standard.</li>
+            </ul>
+
+            <h3>5.2 Linea di partenza (destra)</h3>
+            <p>
+                <strong>Segna PIN</strong> e <strong>Segna RC</strong>: salvano la posizione GPS corrente
+                rispettivamente come boa di sinistra (Pin End) e committee boat (RC).
+                Ogni pressione <strong>sovrascrive</strong> il valore precedente.
+            </p>
+            <div class="callout">
+                <strong>Pin e RC sono volatili</strong>: vivono solo nella sessione corrente
+                e non vengono salvati su file. Al riavvio dell'app la linea va re-impostata.
+                Questo è intenzionale: la linea cambia ad ogni regata.
+            </div>
+            <p>
+                Quando entrambi sono settati, l'app calcola e mostra:
+            </p>
+            <ul>
+                <li><strong>Lung</strong>: lunghezza linea in metri</li>
+                <li><strong>Brg</strong>: rilevamento Pin → RC</li>
+                <li><strong>Distanza</strong> (in cifre giganti gialle): distanza tra la barca e il Pin</li>
+            </ul>
+        </section>
+
+        <section id="lay">
+            <h2>6. Schermata Lay (LayLine)</h2>
+            <p>
+                Vista tattica radar-style con indicatori di layline alle boe.
+            </p>
+            <h3>6.1 Canvas tattico (sinistra)</h3>
+            <p>
+                Cerchio polare centrato sulla barca:
+            </p>
+            <ul>
+                <li><strong>Triangolo bianco</strong> al centro: la barca, prua sempre verso l'alto.</li>
+                <li><strong>Linea verde radiale</strong>: direzione del vento vero (TWA).</li>
+                <li><strong>Pallino arancione</strong>: posizione boa attiva, in scala con la distanza.</li>
+                <li><strong>Linee verde/blu inclinate</strong>: layline simmetriche calcolate sull'angolo
+                    di bolina (TWA atteso).</li>
+            </ul>
+            <h3>6.2 Pannello dati (destra)</h3>
+            <p>
+                Sezione <em>BOA E ROTTA</em>: nome boa, bearing, distanza, VMG, TWA, TWS, ETA.<br>
+                Sezione <em>LAYLINES</em>: stima di tempo per arrivare a boa rispettivamente sul
+                bordo Port e Starboard.
+            </p>
+        </section>
+
+        <section id="wpt">
+            <h2>7. Schermata WPT (Waypoints)</h2>
+            <p>
+                Gestione dei waypoint del campo di regata e selezione della boa target.
+            </p>
+            <h3>7.1 Lista waypoint (sinistra alto)</h3>
+            <p>
+                Ogni elemento mostra: marker di stato, nome, lat, lon. I marker:
+            </p>
+            <ul>
+                <li><code>*</code> all'inizio del nome — boa <strong>attiva</strong> (target_mark)</li>
+                <li><code>&gt;</code> all'inizio — <strong>prossima</strong> boa (dopo il superamento
+                    di quella attiva, l'auto-advance cambia target su questa)</li>
+            </ul>
+            <p>Tap su un waypoint per selezionarlo (ai fini di <em>Modifica</em>, <em>Imposta boa</em>,
+                <em>Rimuovi</em>).</p>
+
+            <h3>7.2 Mappa percorso (sinistra basso)</h3>
+            <p>
+                Vista 2D semplificata con tutti i waypoint e la traccia recente della barca.
+                È una mappa <em>relativa</em>: non sono mappe nautiche, è la visualizzazione geometrica
+                del campo per orientarsi rapidamente.
+            </p>
+
+            <h3>7.3 Pannello azioni (destra)</h3>
+            <ul>
+                <li><strong>Aggiungi</strong>: crea un nuovo waypoint (popup con nome + coordinate).
+                    Default: posizione GPS attuale.</li>
+                <li><strong>Modifica</strong>: edita il waypoint selezionato (rinomina, sposta).</li>
+                <li><strong>Imposta boa</strong>: imposta il waypoint selezionato come boa attiva
+                    (target_mark). Da quel momento in <em>Nav</em> e <em>Lay</em> vedi BRG/DIST/ETA
+                    riferiti a questa boa.</li>
+                <li><strong>Rimuovi</strong>: cancella il waypoint selezionato. Se era la boa attiva,
+                    il target viene azzerato.</li>
+                <li><strong>Carica da file</strong>: ricarica <code>waypoints.json</code> dal disco
+                    (utile dopo un edit esterno).</li>
+            </ul>
+
+            <h3>7.4 Auto-advance</h3>
+            <p>
+                Quando ti avvicini a meno di 50 m dalla boa attiva e per 3 tick consecutivi (~3 s)
+                la distanza torna ad aumentare (CPA superato), l'app passa automaticamente la boa
+                attiva al waypoint successivo nella lista. Anti-rimbalzo: cooldown di 5 s tra due
+                switch consecutivi.
+            </p>
+            <p>
+                Quando entri nella schermata WPT, i waypoint vengono ricaricati dal file. Quindi se
+                modifichi <code>waypoints.json</code> da PC, basta passare in WPT per vedere subito
+                le modifiche.
+            </p>
+        </section>
+
+        <section id="polar">
+            <h2>8. Schermata Polar (Polari)</h2>
+            <p>
+                Caricamento, visualizzazione ed editing della tabella polare della barca.
+            </p>
+            <h3>8.1 Tabella polare (sinistra)</h3>
+            <p>
+                Griglia con righe = TWA (angolo dal vento) e colonne = TWS (forza del vento).
+                Ogni cella contiene la velocità target attesa in knots. Tabella scrollabile sia
+                in verticale (TWA) che in orizzontale (TWS).
+            </p>
+            <h3>8.2 Caricamento e salvataggio (destra)</h3>
+            <ul>
+                <li><strong>JSON</strong>: carica una polare dal file <code>polar.json</code>
+                    nella cartella dati. Formato: <code>{"boat_name": "...", "polar": {tws: {twa: speed}}}</code>.</li>
+                <li><strong>CSV</strong>: importa una polare dal CSV standard (prima riga TWS, prima
+                    colonna TWA, celle = velocità).</li>
+                <li><strong>Salva</strong>: scrive la polare attuale in <code>polar.json</code>.</li>
+                <li><strong>+TWS / +TWA / Clear</strong>: edita la struttura della tabella aggiungendo
+                    colonne, righe, o azzerando tutto.</li>
+            </ul>
+            <p>
+                In basso, la <strong>VMG ottimale</strong>: angoli TWA che massimizzano il VMG
+                in bolina e in poppa, calcolati automaticamente dalla polare caricata.
+            </p>
+        </section>
+
+        <section id="log">
+            <h2>9. Schermata Log (Logging)</h2>
+            <p>
+                Logging dei dati di navigazione su file CSV per analisi successiva.
+            </p>
+            <h3>9.1 Grafico velocità (sinistra)</h3>
+            <p>
+                Visualizzazione storica della SOG degli ultimi 120 secondi. Si aggiorna in tempo
+                reale ad ogni nuovo frame GPS.
+            </p>
+            <h3>9.2 Controlli e dati (destra)</h3>
+            <ul>
+                <li><strong>Avvia log</strong>: crea un nuovo file CSV in <code>logs/</code> con
+                    nome <code>track_YYYYMMDD_HHMMSS.csv</code> e inizia a scrivere una riga ogni
+                    secondi (default 5s).</li>
+                <li><strong>Ferma</strong>: chiude il file di log corrente.</li>
+            </ul>
+            <p>
+                Il pannello inferiore mostra in tempo reale tutti i valori: SOG, COG, HDG, TWS, TWA,
+                AWS, profondità, VMG, lat/lon. Utile come "summary screen" anche senza loggare.
+            </p>
+            <p>
+                Il CSV contiene 20 colonne: timestamp, GPS, velocità (SOG, STW, target, VMG),
+                vento (TWS, TWA, TWD, AWS, AWA), profondità, info boa target (BRG, DIST, ETA),
+                advice tattico (LATO BUONO / VIRA / OK / LAYLINE) e shift in gradi.
+                È un dato completo, adatto sia per analisi posteriore nel portale sia per import
+                in fogli Excel/Power BI.
+            </p>
+            <div class="callout">
+                <strong>Replay nel portale</strong>: i file <code>track_*.csv</code> generati da questa
+                schermata possono essere caricati nel portale web (pulsante <em>📂 Replay log</em> in
+                alto) per analisi posteriore della regata: traccia su mappa, scrubber temporale,
+                playback animato a velocità variabile, marker barca colorato secondo l'advice tattico,
+                distribuzione percentuale dei consigli durante la regata.
+            </div>
+        </section>
+
+        <section id="set">
+            <h2>10. Schermata Set (Impostazioni)</h2>
+
+            <h3>10.1 NMEA TCP (sinistra alto)</h3>
+            <ul>
+                <li><strong>IP Server / Porta</strong>: parametri del processore NMEA. Editare i campi,
+                    poi <em>Salva configurazione</em> per persistere.</li>
+                <li><strong>Connetti / Disconnetti</strong>: apre/chiude la connessione TCP. Lo stato
+                    è mostrato dalla label sopra (<em>Connesso</em> verde / <em>Non connesso</em> rosso).</li>
+            </ul>
+
+            <h3>10.2 Tattica</h3>
+            <p>
+                Cinque pulsanti per scegliere la finestra temporale del calcolo del TWD medio
+                (usato per determinare gli shift): <strong>2m / 5m / 10m / 15m / 20m</strong>.
+                Il default è 5 minuti. Vedi <a href="#tactical">§11</a> per dettagli.
+            </p>
+
+            <h3>10.3 Configurazione</h3>
+            <ul>
+                <li><strong>Salva configurazione</strong>: scrive su disco IP/porta NMEA, finestra TWD,
+                    parametri cloud, e l'ID dell'eventuale boa attiva.</li>
+                <li><strong>Path default</strong>: ripristina i percorsi file ai valori di default
+                    (utile se hai modificato manualmente il config e vuoi tornare alla cartella
+                    sandbox standard).</li>
+            </ul>
+
+            <h3>10.4 Cloud upload (destra)</h3>
+            <p>Vedi <a href="#cloud">§12</a> per dettagli sull'invio dati al portale.</p>
+
+        </section>
+
+        <section id="tactical">
+            <h2>11. Logica del consiglio tattico</h2>
+            <p>
+                L'app calcola in continuazione il <strong>TWD assoluto</strong>
+                (True Wind Direction = heading + TWA, mod 360) e lo accumula in uno storico circolare.
+                Il TWD medio della finestra selezionata (2-20 min) è la "baseline" del vento.
+            </p>
+            <p>
+                Lo <strong>shift</strong> è la differenza tra TWD attuale e TWD medio, normalizzata
+                a -180/+180. Positivo = vento ruotato in senso orario, negativo = antiorario.
+            </p>
+
+            <h3>11.1 Algoritmo decisionale</h3>
+            <p>L'advice viene calcolato così, in ordine di priorità:</p>
+            <ol>
+                <li>Se non sei in bolina (|TWA| &gt; 60°): nessun consiglio (—).</li>
+                <li>Se la boa attiva è entro 5 NM e il rilevamento alla boa è entro 8° dall'heading
+                    corrente: <strong>VIRA (layline)</strong>.</li>
+                <li>Altrimenti, in base a mura e shift:
+                    <ul>
+                        <li>Mura sinistra (TWA &lt; 0): shift orario = "headed" → VIRA;
+                            antiorario = "lifted" → LATO BUONO.</li>
+                        <li>Mura dritta (TWA &gt; 0): inverso.</li>
+                    </ul>
+                    Soglia di azione: |shift tattico| &gt; 5°.
+                </li>
+                <li>Se sotto soglia: <strong>OK</strong>.</li>
+            </ol>
+
+            <h3>11.2 Quando cambiare la finestra</h3>
+            <p>
+                La scelta della finestra TWD dipende dalla stabilità del vento:
+            </p>
+            <ul>
+                <li><strong>2 min</strong>: vento molto instabile, regate brevi. Reagisce velocemente
+                    ma può dare falsi positivi.</li>
+                <li><strong>5 min (default)</strong>: condizioni medie, vento un po' instabile.
+                    Buon compromesso.</li>
+                <li><strong>10 min</strong>: condizioni stabili, gara durata standard.</li>
+                <li><strong>15-20 min</strong>: vento oscillante con cicli lunghi (brezza termica
+                    che si sta stabilizzando), vuoi identificare il trend di base ignorando le
+                    oscillazioni minori.</li>
+            </ul>
+            <p>
+                In gara puoi cambiare al volo: se l'advice "lampeggia" troppo, allunga la finestra;
+                se reagisce troppo lentamente, accorciala.
+            </p>
+        </section>
+
+        <section id="cloud">
+            <h2>12. Cloud upload e portale</h2>
+            <p>
+                L'app può inviare periodicamente uno snapshot dei dati a un endpoint REST.
+                Da lì, il <strong>portale web</strong> li visualizza in tempo reale: traccia su
+                mappa, dati live, advice tattico, condivisibili con allenatore o team a terra.
+            </p>
+
+            <h3>12.1 Configurazione</h3>
+            <p>
+                In <strong>Set → CLOUD UPLOAD</strong>:
+            </p>
+            <ul>
+                <li><strong>ON / OFF</strong>: attiva o disattiva il thread di upload (verde quando
+                    attivo, rosso quando spento).</li>
+                <li><strong>Token</strong>: stringa cliccabile (mascherata per sicurezza). Tap apre
+                    il popup con tutti i path e i valori in memoria, utile per debug.</li>
+                <li><strong>Frequenza</strong>: 5/10/15/30 minuti. Il default è 10 min.</li>
+            </ul>
+
+            <h3>12.2 Pulsanti azione</h3>
+            <ul>
+                <li><strong>Valori path</strong>: popup grande che mostra tutti i path file usati
+                    e i valori effettivi in memoria (config raw, polare, waypoint, cloud URL,
+                    boat ID, token, ecc.). Da usare ogni volta che qualcosa "non torna".</li>
+                <li><strong>Invia</strong>: invio manuale immediato (rate-limited a 1 ogni 60s).</li>
+                <li><strong>Ric. conf</strong>: ricarica il config dal file (utile dopo edit esterno
+                    di <code>sailing_config.json</code>).</li>
+            </ul>
+
+            <h3>12.3 Buffer offline</h3>
+            <p>
+                Se la rete cellulare cade durante un tentativo di invio, lo snapshot viene salvato
+                in <code>cloud_queue.jsonl</code> nella cartella dati. Al successivo ciclo di upload
+                la coda viene drenata prima di inviare nuovi dati. Garantisce zero perdita anche
+                con copertura intermittente.
+            </p>
+
+            <h3>12.4 WiFi di bordo isolato</h3>
+            <p>
+                Se il WiFi della barca non ha uscita Internet (caso comune), l'app forza l'uso della
+                rete cellulare via JNI Android (<code>bindProcessToNetwork</code> sulla rete TRANSPORT_CELLULAR).
+                Effetto collaterale: l'icona WiFi sul tablet può mostrare "no internet" anche mentre
+                l'app sta correttamente caricando via 4G — è normale.
+            </p>
+
+            <h3>12.5 Status</h3>
+            <p>
+                Il box di status mostra: stato (ATTIVO/INATTIVO), conteggio invii riusciti, timestamp
+                ultimo invio, numero di record in coda, eventuali errori dell'ultimo tentativo.
+            </p>
+        </section>
+
+        <section id="files">
+            <h2>13. File e cartelle dati</h2>
+            <p>
+                Tutti i file dell'app vivono nella sandbox esterna:
+            </p>
+            <pre>/storage/emulated/0/Android/data/it.regolofarm.soar/files/
+├── sailing_config.json       (config: NMEA, cloud, polare, waypoint attivo)
+├── polar.json                (tabella polare)
+├── waypoints.json            (lista waypoint)
+├── cloud_queue.jsonl         (buffer offline upload)
+└── logs/
+    ├── track_20260427_103045.csv
+    └── ...</pre>
+            <p>
+                Questa cartella è:
+            </p>
+            <ul>
+                <li><strong>Visibile da PC via USB</strong> (modalità trasferimento file)</li>
+                <li><strong>Senza permessi runtime</strong>: l'app può leggere/scrivere senza chiedere
+                    autorizzazioni</li>
+                <li><strong>Persistente agli aggiornamenti</strong> dell'APK</li>
+                <li><strong>Cancellata alla disinstallazione</strong> dell'app (comportamento standard
+                    Android sandbox)</li>
+            </ul>
+            <div class="callout">
+                <strong>Android 11+</strong>: la cartella <code>Android/data/</code> potrebbe apparire
+                vuota da Esplora File del PC. In quel caso usa l'app <em>Files by Google</em> sul tablet
+                stesso o connettiti con strumenti che supportano lo scoped storage.
+            </div>
+
+            <h3>13.1 Backup e ripristino</h3>
+            <p>
+                Per portare la stessa configurazione su un altro tablet, copia tutti i file della
+                cartella sopra. Per ricominciare da zero, elimina <code>sailing_config.json</code>
+                e riavvia l'app.
+            </p>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>14. Risoluzione problemi</h2>
+
+            <h3>14.1 La grafica è tagliata a metà</h3>
+            <p>
+                Succede al primo avvio se Android applica la rotazione dopo che SDL ha già creato
+                la window. Soluzione: ruota il tablet di 90° e poi rimettilo in landscape, oppure
+                chiudi e riapri l'app.
+            </p>
+
+            <h3>14.2 Dati NMEA non arrivano (sidebar resta "Offline")</h3>
+            <ol>
+                <li>Verifica IP/porta in <strong>Set</strong>.</li>
+                <li>Verifica che il tablet sia connesso al WiFi corretto (quello del processore NMEA).</li>
+                <li>Da PC sulla stessa rete, prova:
+                    <code>telnet 192.168.1.100 10110</code> — devi vedere stringhe NMEA scorrere.</li>
+                <li>Se non scorrono, il problema è a monte (multiplexer/processore/cavi).</li>
+            </ol>
+
+            <h3>14.3 Polare non viene caricata</h3>
+            <p>
+                Verifica con <strong>Set → Valori path</strong> il path <em>Polare</em>. Il file
+                deve essere nella cartella dati o al path personalizzato che hai impostato.
+                Format minimo:
+            </p>
+            <pre>{
+  "boat_name": "MyBoat",
+  "polar": {
+    "6":  {"40": 4.0, "50": 5.0, ...},
+    "10": {"40": 5.5, "50": 6.5, ...},
+    ...
+  }
+}</pre>
+
+            <h3>14.4 Cloud upload sempre in errore</h3>
+            <ol>
+                <li>Tap <strong>Valori path</strong> in Set per verificare URL, Boat ID, Token.</li>
+                <li>Verifica che la SIM dati funzioni (browser di sistema raggiunge Internet).</li>
+                <li>Se l'errore è "Timeout", probabilmente il backend non risponde — aspetta
+                    e ritenta dopo qualche minuto.</li>
+                <li>Se l'errore è "401" o "403": Boat ID o Token sbagliati. Verifica nel portale
+                    o ricrea la barca.</li>
+            </ol>
+
+            <h3>14.5 L'app si chiude dopo qualche minuto</h3>
+            <p>
+                Android in modalità "ottimizzazione batteria" può uccidere l'app in background.
+                Vai nelle impostazioni del tablet, sezione Batteria → Ottimizzazione → cerca
+                "Sailing Racing" → metti su "Non ottimizzare".
+            </p>
+
+            <h3>14.6 GPS non si aggiorna</h3>
+            <p>
+                L'app non usa il GPS interno del tablet, solo il GPS via NMEA dal sistema barca.
+                Se vedi "GPS --" in titlebar significa che le frasi NMEA RMC/GGA non stanno arrivando
+                (oppure non hanno ancora un fix valido). Verifica l'antenna del processore NMEA.
+            </p>
+
+            <h3>14.7 Voglio resettare tutto</h3>
+            <p>
+                Disinstalla l'app dal tablet (tieni premuto sull'icona → Disinstalla), poi reinstalla
+                l'APK. Tutti i file della sandbox vengono cancellati.
+            </p>
+        </section>
+
+        <footer class="manual-footer">
+            <p>
+                <em>Sailing Racing System — Manuale utente versione 1.5</em><br>
+                Per supporto tecnico contatta il supporto Regolo Farm.
+            </p>
+        </footer>
+
+    </main>
+
+</body>
+</html>

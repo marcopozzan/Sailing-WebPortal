@@ -1,0 +1,23 @@
+{
+  "_comment": "Copia in deploy-config.json e compila. NON committare su git (contiene secrets).",
+
+  "ResourceGroup":  "rg-sailing",
+  "AppServicePlan": "asp-sailingrace",
+  "AppServiceName": "sailingrace",
+  "Location":       "westeurope",
+  "PlanSku":        "B3",
+
+  "SqlServer":      "sailing-sql-7645.database.windows.net",
+  "SqlDatabase":    "sailing",
+  "SqlUser":        "sailingadmin",
+  "SqlPassword":    "Pa$$w0rdissima",
+
+  "StorageConnStr": "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net",
+  "ContainerPolars":    "polars",
+  "ContainerWaypoints": "waypoints",
+  "ContainerTracks":    "tracks",
+  "ContainerMeteo":     "meteo",
+
+  "AdminToken":   "WAs2bbdVzF8UHu98TVIA4QJLL1ZC_x4UfWiCJTa-Iow",
+  "CorsOrigins":  "https://sailing-cloud-app.azurewebsites.net"
+}

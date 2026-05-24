@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sailing Cloud - Portale Analisi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ============================================================
+         SIDEBAR NAVIGAZIONE (sempre visibile)
+         ============================================================ -->
+    <nav id="main-nav">
+        <div class="nav-brand">
+            <span class="brand-icon">⛵</span>
+            <span class="brand-text">Sailing Cloud</span>
+        </div>
+        <ul class="nav-links">
+            <li><button class="nav-btn active" data-screen="live">
+                <span class="nav-ico">🛰️</span><span class="nav-lbl">Live</span></button></li>
+            <li><button class="nav-btn" data-screen="replay">
+                <span class="nav-ico">📂</span><span class="nav-lbl">Replay</span></button></li>
+            <li><button class="nav-btn" data-screen="polar">
+                <span class="nav-ico">🌊</span><span class="nav-lbl">Polari</span></button></li>
+            <li><button class="nav-btn" data-screen="waypoints">
+                <span class="nav-ico">📍</span><span class="nav-lbl">WPT</span></button></li>
+            <li><button class="nav-btn" data-screen="weather">
+                <span class="nav-ico">🌦</span><span class="nav-lbl">Meteo</span></button></li>
+        </ul>
+        <div class="nav-footer">
+            <a href="manual.html" class="nav-btn nav-secondary" title="Manuale">
+                <span class="nav-ico">📖</span><span class="nav-lbl">Manuale</span>
+            </a>
+            <button class="nav-btn nav-secondary" id="btn-config" title="Configurazione admin">
+                <span class="nav-ico">⚙</span><span class="nav-lbl">Config</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         AREA CONTENUTO (5 schermate, una visibile alla volta)
+         ============================================================ -->
+    <main id="screens">
+
+        <!-- =================== SCHERMATA: LIVE =================== -->
+        <section class="screen active" id="screen-live">
+            <header class="screen-header">
+                <h1>Live</h1>
+                <div class="screen-header-info">
+                    <span id="last-update">--</span>
+                    <button id="btn-refresh" title="Aggiorna ora">↻</button>
+                    <label class="auto-toggle">
+                        <input type="checkbox" id="chk-auto" checked> Auto 30s
+                    </label>
+                </div>
+            </header>
+            <div class="live-layout">
+                <aside id="boat-sidebar">
+                    <h2>Barche</h2>
+                    <ul id="boat-list"></ul>
+                    <h2>Selezionata</h2>
+                    <div id="boat-detail">
+                        <p class="muted">Seleziona una barca</p>
+                    </div>
+                    <h2>Range tempo</h2>
+                    <div class="time-range">
+                        <button data-hours="1">1h</button>
+                        <button data-hours="4" class="active">4h</button>
+                        <button data-hours="12">12h</button>
+                        <button data-hours="24">24h</button>
+                    </div>
+                </aside>
+                <div class="map-container">
+                    <div id="map"></div>
+                    <div id="live-status" data-state="idle" title="Stato stream live">Disconnesso</div>
+                    <button id="btn-center-boat" title="Centra mappa sulla barca">📍</button>
+                </div>
+                <aside id="livepanel">
+                    <h2>Dati live</h2>
+                    <div id="live-data" class="live-grid">
+                        <p class="muted">--</p>
+                    </div>
+                    <h2>Tactical</h2>
+                    <div id="live-tactical">
+                        <p class="muted">--</p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- =================== SCHERMATA: REPLAY =================== -->
+        <section class="screen" id="screen-replay">
+            <header class="screen-header">
+                <h1>📂 Replay log</h1>
+                <div class="screen-header-info" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                    <!-- Caricamento dal blob storage: scegli barca, scegli
+                         traccia dalla lista, premi Carica. Le tracce vengono
+                         lette via GET /api/boats/{id}/tracks che a sua volta
+                         enumera il container tracks/{boat_id}/ del blob. -->
+                    <label class="muted small">Barca:</label>
+                    <select id="replay-boat-select" style="min-width:140px;">
+                        <option value="">— Scegli barca —</option>
+                    </select>
+                    <label class="muted small">Traccia:</label>
+                    <select id="replay-track-select" style="min-width:260px;" disabled>
+                        <option value="">— Scegli traccia —</option>
+                    </select>
+                    <button id="replay-load-btn" disabled>Carica</button>
+                </div>
+            </header>
+            <div class="replay-body">
+                <aside class="replay-sidebar">
+                    <h3>File</h3>
+                    <div id="replay-info">
+                        <p class="muted">Nessuna traccia caricata.<br><br>
+                            Scegli barca e traccia, poi premi <strong>Carica</strong>.</p>
+                    </div>
+                    <h3>Dati al cursore</h3>
+                    <div id="replay-live" class="live-grid">
+                        <p class="muted">--</p>
+                    </div>
+                    <div id="replay-sail" class="replay-sail" style="display:none;"></div>
+                    <h3>Tactical</h3>
+                    <div id="replay-tactical">
+                        <p class="muted">--</p>
+                    </div>
+                    <h3>Boa target</h3>
+                    <div id="replay-mark">
+                        <p class="muted">--</p>
+                    </div>
+                </aside>
+                <main class="replay-main">
+                    <div class="replay-map-toolbar" id="replay-map-toolbar" style="display:none;">
+                        <label class="replay-toggle">
+                            <input type="checkbox" id="replay-toggle-laylines">
+                            <span>Layline</span>
+                        </label>
+                        <label class="replay-toggle">
+                            <input type="checkbox" id="replay-toggle-liftheader">
+                            <span>Lift/Header</span>
+                        </label>
+                        <label class="replay-toggle">
+                            <input type="checkbox" id="replay-toggle-marks" checked>
+                            <span>Boe</span>
+                        </label>
+                    </div>
+                    <div id="replay-map"></div>
+                    <div id="replay-controls" style="display:none;">
+                        <div class="replay-timeline">
+                            <button id="replay-playpause" title="Play/Pausa">▶</button>
+                            <input type="range" id="replay-slider" min="0" max="100" value="0">
+                            <span id="replay-current-ts">--</span>
+                        </div>
+                        <div class="replay-speeds">
+                            <span class="muted small">Velocità:</span>
+                            <button class="replay-speed-btn" data-speed="1">1x</button>
+                            <button class="replay-speed-btn active" data-speed="5">5x</button>
+                            <button class="replay-speed-btn" data-speed="30">30x</button>
+                            <button class="replay-speed-btn" data-speed="120">120x</button>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- =====================================================
+                     PANNELLO ANALISI (laterale destro, 5 tab)
+                     Popolato da analysis.js dopo il load di una traccia.
+                     Su schermi < 1280px va sotto la mappa (vedi style.css).
+                     ===================================================== -->
+                <aside class="replay-analysis" id="replay-analysis">
+                    <div class="ra-tabs" role="tablist">
+                        <button class="ra-tab active" data-tab="summary" role="tab" title="Riepilogo della sessione">
+                            <span class="ra-tab-icon">📊</span>
+                            <span class="ra-tab-label">Riepilogo</span>
+                        </button>
+                        <button class="ra-tab" data-tab="legs" role="tab" title="Analisi per leg (tratti tra waypoint)">
+                            <span class="ra-tab-icon">🎯</span>
+                            <span class="ra-tab-label">Leg</span>
+                        </button>
+                        <button class="ra-tab" data-tab="maneuvers" role="tab" title="Virate e strambate">
+                            <span class="ra-tab-icon">↪</span>
+                            <span class="ra-tab-label">Manovre</span>
+                        </button>
+                        <button class="ra-tab" data-tab="polar" role="tab" title="Polar plot e cloud di punti reali">
+                            <span class="ra-tab-icon">🌊</span>
+                            <span class="ra-tab-label">Polar</span>
+                        </button>
+                        <button class="ra-tab" data-tab="charts" role="tab" title="Strip chart temporali">
+                            <span class="ra-tab-icon">📈</span>
+                            <span class="ra-tab-label">Chart</span>
+                        </button>
+                        <button class="ra-tab" data-tab="advanced" role="tab" title="Wind shift, overstand, ranking manovre, sail usage">
+                            <span class="ra-tab-icon">🏆</span>
+                            <span class="ra-tab-label">Avanzate</span>
+                        </button>
+                    </div>
+                    <div class="ra-empty" id="ra-empty">
+                        <p class="muted small">L'analisi compare dopo aver caricato una traccia.</p>
+                    </div>
+                    <div class="ra-panel" id="ra-summary" style="display:none;"></div>
+                    <div class="ra-panel" id="ra-legs" style="display:none;"></div>
+                    <div class="ra-panel" id="ra-maneuvers" style="display:none;"></div>
+                    <div class="ra-panel" id="ra-polar" style="display:none;">
+                        <p class="muted small" style="padding:0.6rem;">Polar plot disponibile nel turno 2.</p>
+                    </div>
+                    <div class="ra-panel" id="ra-charts" style="display:none;">
+                        <p class="muted small" style="padding:0.6rem;">Strip chart disponibili nel turno 2.</p>
+                    </div>
+                    <div class="ra-panel" id="ra-advanced" style="display:none;"></div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- =================== SCHERMATA: POLARE =================== -->
+        <section class="screen" id="screen-polar">
+            <header class="screen-header">
+                <h1>🌊 Polare</h1>
+                <div class="screen-header-info">
+                    <label>Barca:</label>
+                    <select id="polar-boat-select" class="boat-select">
+                        <option value="">-- seleziona barca --</option>
+                    </select>
+                    <button id="polar-edit-btn" class="btn-secondary"
+                            style="display:none;" title="Modifica polare di questa barca">
+                        📝 Modifica
+                    </button>
+                </div>
+            </header>
+            <div class="page-body">
+                <div id="polar-empty" class="empty-state">
+                    <p>Seleziona una barca per vedere la sua polare.</p>
+                </div>
+                <div id="polar-content" style="display:none;">
+                    <div id="polar-stats" class="polar-stats"></div>
+                    <div class="polar-table-wrap">
+                        <table id="polar-table" class="polar-table"></table>
+                    </div>
+                    <h3 class="polar-section-title">Diagramma polare</h3>
+                    <div class="polar-chart-wrap">
+                        <canvas id="polar-chart-canvas"></canvas>
+                    </div>
+                </div>
+                <div id="polar-not-uploaded" class="empty-state" style="display:none;">
+                    <p><strong>Nessuna polare caricata per questa barca.</strong></p>
+                    <p>Per caricare una polare, vai su <em>⚙ Config</em> in basso a sinistra,
+                       inserisci l'admin token e seleziona la barca.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================== SCHERMATA: WAYPOINTS =================== -->
+        <section class="screen" id="screen-waypoints">
+            <header class="screen-header">
+                <h1>📍 Waypoints</h1>
+                <div class="screen-header-info">
+                    <label>Barca:</label>
+                    <select id="wpt-boat-select" class="boat-select">
+                        <option value="">-- seleziona barca --</option>
+                    </select>
+                    <button id="wpt-edit-btn" class="btn-secondary"
+                            style="display:none;" title="Modifica waypoint di questa barca">
+                        📝 Modifica
+                    </button>
+                </div>
+            </header>
+            <div class="page-body">
+                <div id="wpt-empty" class="empty-state">
+                    <p>Seleziona una barca per vedere i suoi waypoint.</p>
+                </div>
+                <div id="wpt-content" style="display:none;">
+                    <div class="wpt-view-grid">
+                        <div>
+                            <h3>Lista waypoint</h3>
+                            <table id="wpt-table" class="wpt-table"></table>
+                        </div>
+                        <div>
+                            <h3>Mappa percorso</h3>
+                            <div id="wpt-map" class="wpt-mini-map"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="wpt-not-uploaded" class="empty-state" style="display:none;">
+                    <p><strong>Nessun waypoint caricato per questa barca.</strong></p>
+                    <p>Per caricare i waypoint, vai su <em>⚙ Config</em>,
+                       inserisci l'admin token e seleziona la barca.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================== SCHERMATA: METEO =================== -->
+        <section class="screen" id="screen-weather">
+            <header class="screen-header">
+                <h1>🌦 Meteo previsionale</h1>
+                <div class="screen-header-info">
+                    <label>Barca:</label>
+                    <select id="weather-boat-select" class="boat-select">
+                        <option value="">-- seleziona barca --</option>
+                    </select>
+                    <label title="Data di partenza della regata. Se vuoto, usa l'ora corrente.&#10;Le cards +6/+12/+24/+48h si riferiscono a questa data.">Partenza:</label>
+                    <input type="datetime-local" id="weather-start-time"
+                           class="boat-select" style="font-family:inherit;"
+                           title="Data/ora di partenza della regata. Vuoto = adesso.">
+                    <button id="weather-start-clear" class="btn-secondary"
+                            style="padding:0.3rem 0.5rem;" title="Reset a 'adesso'">↺</button>
+                    <button id="weather-refresh-btn" class="btn-primary" disabled>
+                        🔄 Aggiorna previsione
+                    </button>
+                    <label class="weather-autorefresh-toggle"
+                           title="Aggiorna automaticamente ogni 30 minuti">
+                        <input type="checkbox" id="weather-autorefresh">
+                        <span>Auto (30 min)</span>
+                    </label>
+                    <span id="weather-status" class="muted small"></span>
+                </div>
+            </header>
+            <div class="page-body weather-body">
+                <!-- Sidebar preferenze meteo (turno UI redesign):
+                     porta dentro la schermata Meteo tutte le impostazioni
+                     che prima stavano nella sezione 5 di Config. Sync
+                     bidirezionale con localStorage tramite getPrefs/savePrefs. -->
+                <aside class="weather-sidebar" id="weather-sidebar">
+                    <h3 class="ws-title">⚙ Preferenze</h3>
+
+                    <div class="ws-group">
+                        <label class="ws-label">Modello</label>
+                        <select id="cfg-weather-model" class="ws-input"
+                                title="Modello meteo">
+                            <option value="best_match">Best match (auto)</option>
+                            <option value="meteofrance_arome_france_hd">AROME HD (1km, +48h)</option>
+                            <option value="meteofrance_arome_france">AROME (2.5km, +42h)</option>
+                            <option value="meteofrance_arpege_europe">ARPEGE EU (10km, +96h)</option>
+                            <option value="icon_eu">ICON-EU (7km, +120h)</option>
+                        </select>
+                    </div>
+
+                    <div class="ws-group">
+                        <label class="ws-label">Variabili</label>
+                        <label class="ws-check">
+                            <input type="checkbox" id="cfg-weather-var-wind" checked>
+                            Vento + raffiche
+                        </label>
+                        <label class="ws-check">
+                            <input type="checkbox" id="cfg-weather-var-wave" checked>
+                            Onda (mare)
+                        </label>
+                        <label class="ws-check">
+                            <input type="checkbox" id="cfg-weather-var-precip" checked>
+                            Pioggia
+                        </label>
+                        <label class="ws-check">
+                            <input type="checkbox" id="cfg-weather-var-pressure">
+                            Pressione
+                        </label>
+                        <label class="ws-check">
+                            <input type="checkbox" id="cfg-weather-var-temp">
+                            Temperatura
+                        </label>
+                    </div>
+
+                    <div class="ws-group">
+                        <label class="ws-label">Soglie alert</label>
+                        <div class="ws-thr-row">
+                            <span>Vento</span>
+                            <input type="number" id="cfg-weather-thr-wind"
+                                   class="ws-input ws-thr" min="0" max="60" step="1" value="22">
+                            <span class="muted">kn</span>
+                        </div>
+                        <div class="ws-thr-row">
+                            <span>Raffica</span>
+                            <input type="number" id="cfg-weather-thr-gust"
+                                   class="ws-input ws-thr" min="0" max="80" step="1" value="28">
+                            <span class="muted">kn</span>
+                        </div>
+                        <div class="ws-thr-row">
+                            <span>Onda</span>
+                            <input type="number" id="cfg-weather-thr-wave"
+                                   class="ws-input ws-thr" min="0" max="10" step="0.1" value="2.0">
+                            <span class="muted">m</span>
+                        </div>
+                        <div class="ws-thr-row">
+                            <span>Pioggia</span>
+                            <input type="number" id="cfg-weather-thr-precip"
+                                   class="ws-input ws-thr" min="0" max="50" step="0.5" value="2.0">
+                            <span class="muted">mm/h</span>
+                        </div>
+                    </div>
+
+                    <div class="ws-group">
+                        <button id="cfg-weather-save" class="btn-primary"
+                                style="width:100%; margin-bottom:0.4rem;">
+                            💾 Salva preferenze
+                        </button>
+                        <button id="cfg-weather-reset" class="btn-secondary"
+                                style="width:100%;">
+                            ↺ Default
+                        </button>
+                    </div>
+
+                    <p class="muted small ws-footer">
+                        Salvate solo in questo browser.<br>
+                        Dati: <a href="https://open-meteo.com/" target="_blank"
+                                  rel="noopener">Open-Meteo</a>
+                    </p>
+                </aside>
+
+                <div class="weather-main">
+                <div id="weather-empty" class="empty-state">
+                    <p>Seleziona una barca con waypoint caricati per vedere
+                       la previsione meteo lungo il percorso.</p>
+                    <p class="muted small" style="margin-top:1rem;">
+                       Dati: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+                       — Modelli AROME / ARPEGE / ICON-EU. Nessuna registrazione
+                       richiesta. Aggiornamento ogni 6 ore. Per uso non commerciale.
+                    </p>
+                </div>
+
+                <div id="weather-content" style="display:none;">
+                    <!-- Cards riassuntive: vento medio sulla rotta a +6/+12/+24/+48h.
+                         Ognuna ha un badge "ALERT" se una qualsiasi soglia (vento,
+                         raffica, onda, pioggia) e' superata, calcolato con
+                         le soglie utente da Config. -->
+                    <h2 class="weather-section-title">Riepilogo lungo la rotta</h2>
+                    <div class="weather-cards" id="weather-cards"></div>
+
+                    <!-- Mappa interattiva: tutti i waypoint con barba vento ruotata.
+                         Slider tempo sotto: scrubba 0h..48h e le barbe ruotano. -->
+                    <h2 class="weather-section-title">Mappa vento sui waypoint</h2>
+                    <div class="weather-map-wrap">
+                        <div id="weather-map"></div>
+                        <div class="weather-time-slider-wrap">
+                            <input type="range" id="weather-time-slider"
+                                   min="0" max="48" value="0" step="1">
+                            <div class="weather-time-info">
+                                <span id="weather-time-label">Adesso (+0h)</span>
+                                <span id="weather-time-detail" class="muted small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabella per waypoint, con sotto-righe per ogni orizzonte -->
+                    <h2 class="weather-section-title">Dettaglio per waypoint</h2>
+                    <div class="weather-table-wrap">
+                        <table id="weather-table" class="weather-table"></table>
+                    </div>
+
+                    <!-- Meteogram per waypoint: 3 mini-grafici (vento+raffica,
+                         onda, pioggia) sovrapposti, lungo le 48h. Uno per ogni wp. -->
+                    <h2 class="weather-section-title">Meteogram orari per waypoint</h2>
+                    <div id="weather-meteograms" class="weather-meteograms"></div>
+
+                    <!-- Bottone export PDF + meta -->
+                    <div class="weather-actions">
+                        <button id="weather-export-pdf" class="btn-primary">
+                            📄 Esporta report PDF
+                        </button>
+                        <button id="weather-save-blob" class="btn-primary"
+                                title="Salva il riepilogo + dettaglio waypoint su Azure Blob Storage. Il tablet potra' poi scaricarlo offline.">
+                            💾 Salva su blob (per tablet)
+                        </button>
+                        <span id="weather-save-blob-status" class="muted small"></span>
+                    </div>
+                    <div class="weather-meta" id="weather-meta"></div>
+                </div>
+                </div><!-- /weather-main -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         CONFIG OVERLAY (resta come overlay perché è solo per admin)
+         ============================================================ -->
+    <div id="config-overlay" style="display:none;">
+        <div class="replay-header">
+            <h2>⚙ Configurazione admin</h2>
+            <button id="config-close" title="Chiudi (Esc)" style="background:none;color:var(--muted);border:1px solid var(--muted);padding:0.3rem 0.7rem;border-radius:4px;cursor:pointer;font-size:1rem;">✕</button>
+        </div>
+
+        <div class="config-body">
+            <section class="config-section">
+                <h3>1. Autenticazione admin</h3>
+                <p class="muted small">
+                    Per caricare polari/waypoint serve l'<strong>Admin Token</strong>
+                    (lo trovi su Azure: App Service → Configuration → ADMIN_TOKEN).
+                    Viene salvato solo nel browser.
+                </p>
+                <div class="config-row">
+                    <label>Admin Token</label>
+                    <input type="password" id="cfg-admin-token" placeholder="incolla qui l'admin token" autocomplete="off">
+                    <button id="cfg-save-token" class="btn-secondary">Salva</button>
+                </div>
+                <div class="config-row">
+                    <label>Barca</label>
+                    <select id="cfg-boat-select">
+                        <option value="">-- seleziona --</option>
+                    </select>
+                    <button id="cfg-load-status" class="btn-secondary">Carica stato</button>
+                </div>
+            </section>
+
+            <section class="config-section">
+                <h3>2. Configurazione Blob Storage</h3>
+                <p class="muted small">
+                    Account Azure dove sono salvati polare, waypoint e tracce. I valori
+                    di default sono presi dal backend; modificali solo se ti colleghi a
+                    uno storage diverso (es. ambiente di test). Le modifiche vengono
+                    salvate solo in questo browser, non sul server.
+                    <br>
+                    <strong>Importante:</strong> per cambiare l'AccountKey va modificata
+                    la connection string come Application Setting su Azure App Service
+                    (non e' configurabile da qui per motivi di sicurezza).
+                </p>
+                <div class="config-row">
+                    <label>Account name</label>
+                    <input type="text" id="cfg-blob-account" placeholder="sailingapp">
+                    <button id="cfg-blob-reset" class="btn-secondary" title="Ripristina i default dal server">↺ Default</button>
+                </div>
+                <div class="config-row">
+                    <label>Container polari</label>
+                    <input type="text" id="cfg-blob-container-polars" placeholder="polars">
+                </div>
+                <div class="config-row">
+                    <label>Container waypoint</label>
+                    <input type="text" id="cfg-blob-container-waypoints" placeholder="waypoints">
+                </div>
+                <div class="config-row">
+                    <label>Container tracce</label>
+                    <input type="text" id="cfg-blob-container-tracks" placeholder="tracks">
+                </div>
+                <div class="config-row">
+                    <button id="cfg-blob-save" class="btn-primary">Salva nel browser</button>
+                    <span id="cfg-blob-saved-msg" class="muted small" style="display:none;"></span>
+                </div>
+                <div class="config-url-box" id="cfg-blob-status" style="display:none;">
+                    <label>Stato configurazione:</label>
+                    <div id="cfg-blob-status-text">--</div>
+                </div>
+            </section>
+
+            <section class="config-section">
+                <h3>3. Event Hub (live stream)</h3>
+                <p class="muted small">
+                    Ogni barca pubblica i dati live su un Event Hub <strong>dedicato</strong>.
+                    Configura qui quale EH usare per la barca selezionata in alto.
+                    Se EventHubName non è impostato il live per quella barca è <strong>disabilitato</strong>
+                    (l'endpoint <code>/live/stream</code> ritorna 503).
+                </p>
+                <div class="config-row">
+                    <label>EventHubName</label>
+                    <input type="text" id="cfg-eh-name" placeholder="es. soar-stream">
+                    <button id="cfg-eh-reload" class="btn-secondary" title="Ricarica dal server">↺ Ricarica</button>
+                </div>
+                <div class="config-row" style="align-items: flex-start;">
+                    <label>Connection string<br><span class="muted small">(opzionale)</span></label>
+                    <textarea id="cfg-eh-conn" rows="3" placeholder="Lascia vuoto per usare il namespace di default. Incolla 'Endpoint=sb://...' per override per-barca. Scrivi 'CLEAR' per rimuovere un override esistente." style="flex:1; font-family: monospace; font-size: 0.85rem; resize: vertical;"></textarea>
+                </div>
+                <div class="muted small" id="cfg-eh-custom-ns" style="display:none; margin-left: calc(120px + 1rem);"></div>
+                <div class="muted small" id="cfg-eh-default-ns" style="display:none; margin-left: calc(120px + 1rem);"></div>
+                <div class="config-row">
+                    <button id="cfg-eh-save" class="btn-primary">Salva Event Hub</button>
+                </div>
+            </section>
+
+            <section class="config-section" id="config-status-section" style="display:none;">
+                <h3>4. Polare</h3>
+                <div id="cfg-polar-status" class="config-status-box">--</div>
+                <div class="config-row">
+                    <label>File polar.json</label>
+                    <input type="file" id="cfg-polar-file" accept=".json">
+                    <button id="cfg-polar-upload" class="btn-primary" title="Carica il file selezionato sul blob storage">⬆ Carica su blob</button>
+                    <button id="cfg-polar-download" class="btn-secondary" title="Scarica il file dal blob storage">⬇ Scarica da blob</button>
+                    <button id="cfg-polar-edit" class="btn-secondary">📝 Modifica</button>
+                </div>
+                <div class="config-url-box" id="cfg-polar-url" style="display:none;">
+                    <label>URL download per il tablet:</label>
+                    <div class="url-row">
+                        <code id="cfg-polar-url-text">--</code>
+                        <button class="btn-copy" data-target="cfg-polar-url-text">📋 Copia</button>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:1.5rem;">5. Waypoints</h3>
+                <div id="cfg-wpt-status" class="config-status-box">--</div>
+                <div class="config-row">
+                    <label>File waypoints.json</label>
+                    <input type="file" id="cfg-wpt-file" accept=".json">
+                    <button id="cfg-wpt-upload" class="btn-primary" title="Carica il file selezionato sul blob storage">⬆ Carica su blob</button>
+                    <button id="cfg-wpt-download" class="btn-secondary" title="Scarica il file dal blob storage">⬇ Scarica da blob</button>
+                    <button id="cfg-wpt-edit" class="btn-secondary">📝 Modifica</button>
+                </div>
+                <div class="config-url-box" id="cfg-wpt-url" style="display:none;">
+                    <label>URL download per il tablet:</label>
+                    <div class="url-row">
+                        <code id="cfg-wpt-url-text">--</code>
+                        <button class="btn-copy" data-target="cfg-wpt-url-text">📋 Copia</button>
+                    </div>
+                </div>
+
+                <p class="muted small" style="margin-top:1.5rem;">
+                    <strong>Carica su blob:</strong> seleziona un file .json e clicca
+                    "Carica su blob". Il file viene caricato sull'Azure Blob Storage e
+                    diventa subito disponibile al tablet.
+                    <br>
+                    <strong>Scarica da blob:</strong> recupera la versione attualmente
+                    sul blob storage e te la salva sul PC. Utile per fare backup o
+                    modifiche locali.
+                    <br>
+                    <strong>URL nel tablet:</strong> sul tablet, apri il browser e
+                    incolla l'URL. Il file viene scaricato. Sposta il file nella
+                    cartella <code>Android/data/it.regolofarm.soar/files/</code>. Riapri l'app.
+                    <br>
+                    Dopo aver caricato, le viste pubbliche
+                    (<a href="#" data-jump-screen="polar">Polare</a> /
+                    <a href="#" data-jump-screen="waypoints">Waypoints</a>) si aggiornano automaticamente.
+                </p>
+            </section>
+
+            <section class="config-section">
+                <h3>Convertitore coordinate</h3>
+                <p class="muted small">
+                    Il file <code>waypoints.json</code> usa il formato gradi-minuti
+                    (<code>45°46.154'N</code>). Se hai coordinate in formato decimale
+                    (es. da Google Maps), convertile qui.
+                </p>
+                <div class="config-row">
+                    <label>Decimale</label>
+                    <input type="text" id="cfg-coord-dec" placeholder="es. 45.769238">
+                    <select id="cfg-coord-axis" style="flex:0 0 90px; min-width:90px;">
+                        <option value="lat">lat</option>
+                        <option value="lon">lon</option>
+                    </select>
+                    <button id="cfg-coord-convert" class="btn-primary">Converti →</button>
+                </div>
+                <div class="config-row">
+                    <label>Formato DM</label>
+                    <input type="text" id="cfg-coord-dm" placeholder="es. 45°46.154'N" readonly>
+                    <button class="btn-copy" data-target="cfg-coord-dm-input">📋 Copia</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         EDITOR JSON OVERLAY (modifica polar.json o waypoints.json)
+         ============================================================ -->
+    <div id="json-editor-overlay" style="display:none;">
+        <div class="replay-header">
+            <h2 id="je-title">📝 Modifica</h2>
+            <button id="je-close" title="Chiudi (Esc)" style="background:none;color:var(--muted);border:1px solid var(--muted);padding:0.3rem 0.7rem;border-radius:4px;cursor:pointer;font-size:1rem;">✕</button>
+        </div>
+        <div class="je-body">
+            <div class="je-toolbar">
+                <span id="je-target-info" class="muted small">--</span>
+                <div class="je-actions">
+                    <button id="je-format" class="btn-secondary">{ Formatta }</button>
+                    <button id="je-cancel" class="btn-secondary">Annulla</button>
+                    <button id="je-save" class="btn-primary">Salva</button>
+                </div>
+            </div>
+            <textarea id="je-textarea" spellcheck="false" autocomplete="off"></textarea>
+            <div id="je-status" class="je-status">Pronto</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <!-- auth.js DEVE caricare prima degli altri moduli, perche' espone
+         window.SailingAuth.authFetch usato da tutti per chiamate API. -->
+    <script src="auth.js"></script>
+    <script src="config.js"></script>
+    <script src="coord.js"></script>
+    <script src="nav.js"></script>
+    <script src="app.js"></script>
+    <script src="live-stream.js"></script>
+    <script src="analysis.js"></script>
+    <script src="analysis-plots.js"></script>
+    <script src="replay.js"></script>
+    <script src="weather.js"></script>
+    <script src="polarview.js"></script>
+    <script src="wptview.js"></script>
+    <script src="boatconfig.js"></script>
+    <script src="jsoneditor.js"></script>
+</body>
+</html>
