@@ -1115,6 +1115,7 @@ _container_polars        = os.getenv("AZURE_BLOB_CONTAINER_POLARS",    "polars")
 _container_waypoints     = os.getenv("AZURE_BLOB_CONTAINER_WAYPOINTS", "waypoints")
 _container_tracks        = os.getenv("AZURE_BLOB_CONTAINER_TRACKS",    "tracks")
 _container_meteo         = os.getenv("AZURE_BLOB_CONTAINER_METEO",     "meteo")
+_container_apks          = os.getenv("AZURE_BLOB_CONTAINER_APKS",      "apks")
 # Mantengo l'alias _blob_container_name per i tracks (compatibilita' con
 # il codice tracce esistente, che usa il nome senza suffisso).
 _blob_container_name     = _container_tracks
@@ -1228,7 +1229,10 @@ def _generate_upload_sas(boat_id: str, filename: str,
     """Genera un URL SAS per upload (PUT) di un singolo blob.
 
     Args:
-      boat_id, filename: path del blob = {boat_id}/{filename}
+      boat_id, filename: path del blob = {boat_id}/{filename}.
+                         Se boat_id e' "" o None, il blob va alla RADICE del
+                         container (path = filename). Utile per APK condivisi
+                         o asset globali.
       container_name: in quale container scrivere. Se None usa _container_tracks
                       (default storico per compatibilita').
       expires_minutes: validita' della SAS, default 30 minuti.
@@ -1242,7 +1246,8 @@ def _generate_upload_sas(boat_id: str, filename: str,
         raise HTTPException(500, "Storage not configured")
 
     container = container_name or _container_tracks
-    blob_path = f"{boat_id}/{filename}"
+    # Blob path: con prefisso se boat_id non vuoto, altrimenti alla radice
+    blob_path = f"{boat_id}/{filename}" if boat_id else filename
     sas = generate_blob_sas(
         account_name=account_name,
         container_name=container,
@@ -1426,10 +1431,146 @@ def delete_track(
 #       ├── style.css
 #       └── ...
 #
-# Tutti gli endpoint API stanno sotto /api/... e /health, mentre StaticFiles
-# cattura il resto. L'ordine di registrazione conta: questa mount va fatta
-# DOPO tutti i @app.get/post sopra, altrimenti StaticFiles intercetterebbe
-# anche i path API.
+# =============================================================================
+# DISTRIBUZIONE APK (sideloading tablet)
+# =============================================================================
+# Permette di:
+#   - Listare gli APK disponibili (pubblico, per la pagina di download)
+#   - Generare SAS URL per upload di nuove versioni (admin token)
+#   - Cancellare versioni vecchie (admin token)
+#
+# Gli APK sono salvati nel container blob 'apks' (env AZURE_BLOB_CONTAINER_APKS),
+# alla RADICE del container con nomi tipo: soar-1.7.0.apk, soar-1.7.1.apk.
+# Il container deve essere configurato come 'anonymous read' su Azure Portal
+# perche' i tablet del team possano scaricare senza autenticazione.
+#
+# Workflow upload nuovo APK:
+#   1. Browser admin: drag&drop file APK -> richiede SAS URL al backend
+#   2. POST /api/admin/apks/upload-url?filename=soar-1.7.0.apk + Bearer admin
+#   3. Riceve SAS URL + blob_url pubblico
+#   4. Browser fa PUT diretto del file binario al SAS URL
+#   5. APK pubblicato istantaneamente, visibile in GET /api/apks
+
+@app.get("/api/apks")
+def list_apks():
+    """Lista pubblica degli APK disponibili per il download.
+    Ordinata per ultima modifica (piu' recenti prima).
+    Ogni voce contiene: filename, size_bytes, last_modified, download_url.
+    """
+    svc = _get_blob_service()
+    if not svc:
+        raise HTTPException(500, "Blob storage not configured")
+    try:
+        container = svc.get_container_client(_container_apks)
+        apks = []
+        for blob in container.list_blobs():
+            # Filtro solo .apk (escludo eventuali metadata o altro)
+            if not blob.name.lower().endswith(".apk"):
+                continue
+            apks.append({
+                "filename": blob.name,
+                "size_bytes": blob.size,
+                "size_mb": round(blob.size / 1024 / 1024, 1),
+                "last_modified": blob.last_modified.isoformat() if blob.last_modified else None,
+                "download_url": _public_download_url(_container_apks, "", blob.name),
+            })
+        # Piu' recenti prima
+        apks.sort(key=lambda a: a["last_modified"] or "", reverse=True)
+        return apks
+    except Exception as e:
+        raise HTTPException(500, f"List APKs failed: {e}")
+
+
+@app.post("/api/admin/apks/upload-url")
+def get_apk_upload_url(
+    filename: str = Query(..., description="Nome del file APK, es. soar-1.7.0.apk"),
+    authorization: Optional[str] = Header(None),
+):
+    """Genera SAS URL temporanea per upload di un nuovo APK.
+    Richiede admin token (Bearer).
+
+    Filename sanitizzato: deve matchare regex [A-Za-z0-9._-] e terminare in .apk.
+    SAS valida 30 minuti (file grandi, upload puo' essere lento su 4G).
+    """
+    if not ADMIN_TOKEN:
+        raise HTTPException(503, "Admin endpoints disabled (ADMIN_TOKEN not set)")
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "Missing Bearer token")
+    if authorization[7:].strip() != ADMIN_TOKEN:
+        raise HTTPException(401, "Invalid admin token")
+
+    # Sanitizza filename: solo nome file, no path. Massimo 100 char.
+    import re as _re
+    filename = os.path.basename(filename).strip()
+    if not _re.match(r'^[A-Za-z0-9._-]{1,100}$', filename):
+        raise HTTPException(400, "Filename non valido (alfanumerici, '.', '_', '-' max 100 char)")
+    if not filename.lower().endswith('.apk'):
+        raise HTTPException(400, "Filename deve terminare in .apk")
+
+    if not _get_blob_service():
+        raise HTTPException(500, "Blob storage not configured")
+
+    try:
+        # boat_id="" -> blob alla radice del container apks
+        sas_url = _generate_upload_sas(
+            "", filename,
+            container_name=_container_apks,
+            expires_minutes=30,
+        )
+        return {
+            "upload_url": sas_url,
+            "filename": filename,
+            "expires_in_minutes": 30,
+            "method": "PUT",
+            "headers": {
+                "x-ms-blob-type": "BlockBlob",
+                "Content-Type": "application/vnd.android.package-archive",
+            },
+            "blob_url": _public_download_url(_container_apks, "", filename),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"SAS generation failed: {e}")
+
+
+@app.delete("/api/admin/apks/{filename}")
+def delete_apk(
+    filename: str,
+    authorization: Optional[str] = Header(None),
+):
+    """Cancella un APK dal container. Richiede admin token."""
+    if not ADMIN_TOKEN:
+        raise HTTPException(503, "Admin endpoints disabled")
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "Missing Bearer token")
+    if authorization[7:].strip() != ADMIN_TOKEN:
+        raise HTTPException(401, "Invalid admin token")
+
+    import re as _re
+    filename = os.path.basename(filename).strip()
+    if not _re.match(r'^[A-Za-z0-9._-]{1,100}$', filename):
+        raise HTTPException(400, "Filename non valido")
+    if not filename.lower().endswith('.apk'):
+        raise HTTPException(400, "Filename deve terminare in .apk")
+
+    svc = _get_blob_service()
+    if not svc:
+        raise HTTPException(500, "Blob storage not configured")
+    try:
+        container = svc.get_container_client(_container_apks)
+        container.delete_blob(filename)
+        return {"ok": True, "deleted": filename}
+    except Exception as e:
+        if "BlobNotFound" in str(e):
+            return {"ok": True, "deleted": filename, "note": "already missing"}
+        raise HTTPException(500, f"Delete failed: {e}")
+
+
+# =============================================================================
+# STATIC FILES (frontend)
+# =============================================================================
+
 #
 # html=True fa servire index.html in automatico quando la URL e' "/" oppure
 # punta a una directory. check_dir=False evita un crash se la cartella non

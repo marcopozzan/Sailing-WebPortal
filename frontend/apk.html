@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download App Tablet - Sailing Cloud</title>
+    <style>
+        :root {
+            --navy: #1B3A6B;
+            --orange: #FF7E29;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --muted: #6c7a89;
+            --border: #e1e8ed;
+            --ok: #2ecc71;
+            --err: #e74c3c;
+            --warn: #f39c12;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 4px solid var(--orange);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        header .brand { font-size: 1.5rem; font-weight: 600; }
+        header .brand .icon { margin-right: 0.5rem; }
+        header a { color: white; text-decoration: none; opacity: 0.85; }
+        header a:hover { opacity: 1; text-decoration: underline; }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        h1 { margin-top: 0; color: var(--navy); }
+        h2 { color: var(--navy); margin-top: 2rem; }
+        .muted { color: var(--muted); font-size: 0.92em; }
+
+        .card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .install-instructions {
+            background: #fff8ed;
+            border-left: 4px solid var(--orange);
+            border-radius: 6px;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .install-instructions h3 { margin-top: 0; color: var(--navy); }
+        .install-instructions ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+        .install-instructions li { margin: 0.4rem 0; }
+
+        .apk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .apk-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+        .apk-item:hover { border-color: var(--orange); }
+        .apk-item.latest {
+            border-color: var(--ok);
+            background: #f0fff4;
+        }
+        .apk-info { flex: 1; min-width: 0; }
+        .apk-name {
+            font-weight: 600;
+            font-size: 1.05em;
+            margin-bottom: 0.2rem;
+            word-break: break-all;
+        }
+        .apk-meta {
+            font-size: 0.88em;
+            color: var(--muted);
+        }
+        .apk-latest-badge {
+            display: inline-block;
+            background: var(--ok);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-download {
+            background: var(--orange);
+            color: white;
+        }
+        .btn-download:hover { background: #e56a1a; }
+        .btn-secondary {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: #f4f6f9; }
+        .btn-danger {
+            background: white;
+            color: var(--err);
+            border: 1px solid var(--err);
+        }
+        .btn-danger:hover { background: var(--err); color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--muted);
+        }
+        .empty-state .icon { font-size: 3em; opacity: 0.4; }
+
+        .admin-toggle {
+            text-align: right;
+            margin: 1rem 0;
+        }
+        .admin-toggle button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.85em;
+            text-decoration: underline;
+        }
+        .admin-panel {
+            background: #fff8ed;
+            border: 1px dashed var(--orange);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .admin-panel h2 { margin-top: 0; }
+        .admin-panel label {
+            display: block;
+            margin-top: 0.8rem;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        .admin-panel input[type=text],
+        .admin-panel input[type=password] {
+            width: 100%;
+            padding: 0.6rem;
+            margin-top: 0.3rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-family: inherit;
+        }
+
+        .drop-zone {
+            margin-top: 1rem;
+            border: 2px dashed var(--orange);
+            border-radius: 10px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            background: white;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            background: #fff3e0;
+            border-color: #e56a1a;
+        }
+        .drop-zone .drop-icon {
+            font-size: 2.5em;
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-wrap {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e1e8ed;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--orange);
+            width: 0%;
+            transition: width 0.2s;
+        }
+        .progress-status {
+            font-size: 0.9em;
+            margin-bottom: 0.3rem;
+        }
+
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 0.95em;
+        }
+        .alert-ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-err { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <span class="icon">⛵</span>Sailing Cloud
+        </div>
+        <a href="/">← Torna al portale</a>
+    </header>
+
+    <div class="container">
+        <h1>📱 App Tablet - Download</h1>
+        <p class="muted">
+            App Android per la registrazione dati di bordo (GPS, vento, manovre).
+            Da installare sui tablet di squadra prima della regata.
+        </p>
+
+        <div class="install-instructions">
+            <h3>📖 Come installare sul tablet</h3>
+            <ol>
+                <li>Scarica il file <strong>.apk</strong> qui sotto sul tablet</li>
+                <li>Apri il file scaricato (di solito da Download del browser)</li>
+                <li>
+                    Android chiederà il permesso di <strong>"installare app sconosciute"</strong>
+                    per il browser/file manager con cui hai aperto il file → tocca
+                    <strong>"Impostazioni"</strong> e abilita il toggle
+                </li>
+                <li>Torna indietro e completa l'installazione</li>
+                <li>Apri "SOAR" dal menu app per iniziare</li>
+            </ol>
+            <p class="muted" style="margin-bottom:0">
+                Le versioni successive si aggiornano dalla stessa pagina senza dover
+                disinstallare la precedente (i dati salvati restano).
+            </p>
+        </div>
+
+        <h2>Versioni disponibili</h2>
+        <div id="apk-list" class="apk-list">
+            <p class="muted">Caricamento...</p>
+        </div>
+
+        <div class="admin-toggle">
+            <button id="admin-toggle-btn">⚙ Pannello amministratore</button>
+        </div>
+
+        <div id="admin-panel" class="admin-panel" style="display:none;">
+            <h2>⚙ Pannello amministratore</h2>
+            <p class="muted">
+                Per pubblicare una nuova versione: inserisci l'admin token e trascina
+                il file APK qui sotto. Il file viene caricato direttamente su Azure
+                Blob Storage e diventa subito scaricabile dai tablet.
+            </p>
+
+            <label for="admin-token-input">Admin Token</label>
+            <input type="password" id="admin-token-input" placeholder="Bearer token configurato sul backend">
+            <p class="muted" style="font-size:0.85em">
+                Salvato in localStorage di questo browser come 'sailing_admin_token'.
+                Stesso token usato per le altre operazioni admin del portale.
+            </p>
+
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-icon">📦</div>
+                <div><strong>Trascina qui un file .apk</strong></div>
+                <div class="muted" style="margin-top:0.3rem">
+                    oppure <a href="#" id="pick-file-link">scegli dal computer</a>
+                </div>
+                <input type="file" id="file-input" accept=".apk" style="display:none;">
+            </div>
+
+            <div id="upload-progress" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const TOKEN_KEY = 'sailing_admin_token';
+        const apkList = document.getElementById('apk-list');
+        const adminPanel = document.getElementById('admin-panel');
+        const adminToggleBtn = document.getElementById('admin-toggle-btn');
+        const tokenInput = document.getElementById('admin-token-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const pickFileLink = document.getElementById('pick-file-link');
+        const progressDiv = document.getElementById('upload-progress');
+
+        // -----------------------------------------------------------------
+        // Caricamento iniziale: token salvato + lista APK
+        // -----------------------------------------------------------------
+        tokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
+        tokenInput.addEventListener('change', () => {
+            localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+        });
+
+        adminToggleBtn.addEventListener('click', () => {
+            const visible = adminPanel.style.display !== 'none';
+            adminPanel.style.display = visible ? 'none' : 'block';
+            adminToggleBtn.textContent = visible
+                ? '⚙ Pannello amministratore'
+                : '✕ Nascondi pannello admin';
+        });
+
+        async function loadApks() {
+            apkList.innerHTML = '<p class="muted">Caricamento...</p>';
+            try {
+                const res = await fetch('/api/apks');
+                if (!res.ok) {
+                    throw new Error('HTTP ' + res.status);
+                }
+                const apks = await res.json();
+                renderApks(apks);
+            } catch (e) {
+                apkList.innerHTML =
+                    '<div class="alert alert-err">Errore caricamento lista APK: ' +
+                    e.message + '</div>';
+            }
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            return d.toLocaleString('it-IT', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function renderApks(apks) {
+            if (!apks || apks.length === 0) {
+                apkList.innerHTML =
+                    '<div class="empty-state">' +
+                    '<div class="icon">📦</div>' +
+                    '<p>Nessun APK disponibile.</p>' +
+                    '<p class="muted">Il primo apk va caricato dal pannello admin in fondo alla pagina.</p>' +
+                    '</div>';
+                return;
+            }
+            // Il primo (lista gia ordinata desc) e' il piu' recente
+            apkList.innerHTML = apks.map((apk, i) => `
+                <div class="apk-item${i === 0 ? ' latest' : ''}">
+                    <div class="apk-info">
+                        <div class="apk-name">
+                            ${i === 0 ? '<span class="apk-latest-badge">ULTIMA</span>' : ''}
+                            ${escapeHtml(apk.filename)}
+                        </div>
+                        <div class="apk-meta">
+                            ${apk.size_mb} MB ·
+                            caricato il ${fmtDate(apk.last_modified)}
+                        </div>
+                    </div>
+                    <a class="btn btn-download" href="${apk.download_url}" download>
+                        ⬇ Scarica
+                    </a>
+                    <button class="btn btn-danger admin-only" data-filename="${escapeHtml(apk.filename)}"
+                            style="display:none">🗑</button>
+                </div>
+            `).join('');
+
+            // Attiva i tasti delete se il pannello admin e' aperto
+            if (adminPanel.style.display !== 'none') {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            }
+            document.querySelectorAll('.btn-danger[data-filename]').forEach(btn => {
+                btn.addEventListener('click', () => deleteApk(btn.dataset.filename));
+            });
+        }
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        // -----------------------------------------------------------------
+        // Upload via drag&drop o file picker
+        // -----------------------------------------------------------------
+        ['dragenter', 'dragover'].forEach(ev => {
+            dropZone.addEventListener(ev, e => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(ev => {
+            dropZone.addEventListener(ev, e => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+        });
+        dropZone.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) handleFile(files[0]);
+        });
+        dropZone.addEventListener('click', () => fileInput.click());
+        pickFileLink.addEventListener('click', e => {
+            e.preventDefault();
+            fileInput.click();
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.apk')) {
+                showProgressMsg('Solo file .apk', 'err');
+                return;
+            }
+            const token = (tokenInput.value || '').trim();
+            if (!token) {
+                showProgressMsg('Inserisci prima l\'admin token', 'err');
+                return;
+            }
+            localStorage.setItem(TOKEN_KEY, token);
+
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+            showProgress(file.name, sizeMB, 0, 'Richiesta autorizzazione...');
+
+            try {
+                // 1) chiedo SAS URL al backend
+                const sasRes = await fetch(
+                    '/api/admin/apks/upload-url?filename=' + encodeURIComponent(file.name),
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                if (!sasRes.ok) {
+                    let detail = '';
+                    try { detail = (await sasRes.json()).detail || ''; } catch {}
+                    throw new Error('SAS HTTP ' + sasRes.status +
+                                    (detail ? ': ' + detail : ''));
+                }
+                const sas = await sasRes.json();
+
+                // 2) upload diretto a Azure con progress via XMLHttpRequest
+                //    (fetch non supporta progress per upload)
+                await uploadWithProgress(sas.upload_url, file, sas.headers, (loaded, total) => {
+                    const pct = Math.round((loaded / total) * 100);
+                    showProgress(file.name, sizeMB, pct, 'Upload ' + pct + '%');
+                });
+
+                showProgressMsg(
+                    'Pubblicato: ' + file.name + ' (' + sizeMB + ' MB)',
+                    'ok');
+                await loadApks();  // refresh lista
+            } catch (e) {
+                showProgressMsg('Errore upload: ' + e.message, 'err');
+            }
+        }
+
+        function uploadWithProgress(url, file, headers, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', url);
+                if (headers) {
+                    for (const [k, v] of Object.entries(headers)) {
+                        xhr.setRequestHeader(k, v);
+                    }
+                }
+                xhr.upload.addEventListener('progress', e => {
+                    if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total);
+                });
+                xhr.addEventListener('load', () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve();
+                    } else {
+                        reject(new Error('Upload HTTP ' + xhr.status));
+                    }
+                });
+                xhr.addEventListener('error', () => reject(new Error('Network error')));
+                xhr.send(file);
+            });
+        }
+
+        function showProgress(filename, sizeMB, pct, msg) {
+            progressDiv.style.display = 'block';
+            progressDiv.innerHTML = `
+                <div class="progress-wrap">
+                    <div class="progress-status">
+                        <strong>${escapeHtml(filename)}</strong> (${sizeMB} MB) — ${escapeHtml(msg)}
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+        }
+
+        function showProgressMsg(msg, kind) {
+            progressDiv.style.display = 'block';
+            progressDiv.innerHTML = `<div class="alert alert-${kind}">${escapeHtml(msg)}</div>`;
+        }
+
+        // -----------------------------------------------------------------
+        // Delete APK (admin)
+        // -----------------------------------------------------------------
+        async function deleteApk(filename) {
+            const token = (tokenInput.value || '').trim();
+            if (!token) {
+                alert('Inserisci prima l\'admin token');
+                return;
+            }
+            if (!confirm('Eliminare definitivamente "' + filename + '"?')) return;
+            try {
+                const res = await fetch(
+                    '/api/admin/apks/' + encodeURIComponent(filename),
+                    {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                if (!res.ok) {
+                    let detail = '';
+                    try { detail = (await res.json()).detail || ''; } catch {}
+                    throw new Error('HTTP ' + res.status + (detail ? ': ' + detail : ''));
+                }
+                await loadApks();
+            } catch (e) {
+                alert('Errore eliminazione: ' + e.message);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Init
+        // -----------------------------------------------------------------
+        loadApks();
+    })();
+    </script>
+</body>
+</html>
