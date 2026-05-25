@@ -1451,11 +1451,52 @@ def delete_track(
 #   4. Browser fa PUT diretto del file binario al SAS URL
 #   5. APK pubblicato istantaneamente, visibile in GET /api/apks
 
+def _read_active_apk() -> Optional[str]:
+    """Legge il filename dell'APK attualmente marcato come 'attivo' dal blob
+    '_active.json' nel container apks. Se non esiste, ritorna None.
+
+    Il file ha formato: {"filename": "soar-1.7.0.apk"}.
+    Il prefisso underscore '_active.json' lo distingue dai file .apk veri:
+    il filtro su list_apks esclude tutto cio' che non finisce per .apk.
+    """
+    svc = _get_blob_service()
+    if not svc:
+        return None
+    try:
+        container = svc.get_container_client(_container_apks)
+        blob = container.get_blob_client("_active.json")
+        if not blob.exists():
+            return None
+        import json as _json
+        data = _json.loads(blob.download_blob().readall())
+        return data.get("filename")
+    except Exception:
+        return None
+
+
+def _write_active_apk(filename: str) -> None:
+    """Sovrascrive '_active.json' nel container apks con il filename indicato.
+    Atomic: la PUT su blob storage e' una singola operazione."""
+    svc = _get_blob_service()
+    if not svc:
+        raise HTTPException(500, "Blob storage not configured")
+    import json as _json
+    container = svc.get_container_client(_container_apks)
+    blob = container.get_blob_client("_active.json")
+    body = _json.dumps({"filename": filename}, ensure_ascii=False).encode("utf-8")
+    blob.upload_blob(body, overwrite=True, content_type="application/json")
+
+
 @app.get("/api/apks")
 def list_apks():
     """Lista pubblica degli APK disponibili per il download.
     Ordinata per ultima modifica (piu' recenti prima).
-    Ogni voce contiene: filename, size_bytes, last_modified, download_url.
+    Ogni voce contiene: filename, size_bytes, last_modified, download_url, is_active.
+
+    Il campo 'is_active' indica l'APK marcato esplicitamente dall'admin come
+    quello principale. Se l'admin non ha ancora scelto, oppure se l'APK
+    attivo non esiste piu' (cancellato), il campo e' True per il piu' recente
+    (fallback).
     """
     svc = _get_blob_service()
     if not svc:
@@ -1464,7 +1505,7 @@ def list_apks():
         container = svc.get_container_client(_container_apks)
         apks = []
         for blob in container.list_blobs():
-            # Filtro solo .apk (escludo eventuali metadata o altro)
+            # Filtro solo .apk (escludo metadata come _active.json)
             if not blob.name.lower().endswith(".apk"):
                 continue
             apks.append({
@@ -1473,12 +1514,96 @@ def list_apks():
                 "size_mb": round(blob.size / 1024 / 1024, 1),
                 "last_modified": blob.last_modified.isoformat() if blob.last_modified else None,
                 "download_url": _public_download_url(_container_apks, "", blob.name),
+                "is_active": False,  # default; popolato sotto
             })
         # Piu' recenti prima
         apks.sort(key=lambda a: a["last_modified"] or "", reverse=True)
+
+        # Marca l'APK attivo. Logica fallback:
+        #   1) Se esiste _active.json e il filename indicato e' nella lista ->
+        #      quello e' attivo.
+        #   2) Altrimenti il piu' recente (primo della lista ordinata).
+        active_filename = _read_active_apk()
+        existing = [a["filename"] for a in apks]
+        if active_filename and active_filename in existing:
+            for a in apks:
+                a["is_active"] = (a["filename"] == active_filename)
+        elif apks:
+            # Fallback: il piu' recente
+            apks[0]["is_active"] = True
         return apks
     except Exception as e:
         raise HTTPException(500, f"List APKs failed: {e}")
+
+
+@app.get("/api/apks/active")
+def get_active_apk():
+    """Endpoint pubblico: ritorna le info dell'APK attivo (quello che i
+    tablet devono scaricare). Comoda per i tablet/script che vogliono il
+    'latest stable' senza fare list+filter.
+
+    Risponde con: {filename, download_url, size_bytes, last_modified}.
+    Se nessun APK e' presente, ritorna 404.
+    """
+    apks = list_apks()
+    if not apks:
+        raise HTTPException(404, "No APKs available")
+    active = next((a for a in apks if a["is_active"]), apks[0])
+    return {
+        "filename": active["filename"],
+        "download_url": active["download_url"],
+        "size_bytes": active["size_bytes"],
+        "size_mb": active["size_mb"],
+        "last_modified": active["last_modified"],
+    }
+
+
+@app.put("/api/admin/apks/active")
+def set_active_apk(
+    filename: str = Query(..., description="Nome del file APK da impostare come attivo"),
+    authorization: Optional[str] = Header(None),
+):
+    """Imposta l'APK attivo (quello che i tablet scaricheranno).
+    Richiede admin token.
+
+    Verifica che l'APK esista davvero nel container prima di salvare
+    _active.json: cosi' evitiamo di marcare attivo un file inesistente.
+    """
+    if not ADMIN_TOKEN:
+        raise HTTPException(503, "Admin endpoints disabled (ADMIN_TOKEN not set)")
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "Missing Bearer token")
+    if authorization[7:].strip() != ADMIN_TOKEN:
+        raise HTTPException(401, "Invalid admin token")
+
+    # Sanitizza filename
+    import re as _re
+    filename = os.path.basename(filename).strip()
+    if not _re.match(r'^[A-Za-z0-9._-]{1,100}$', filename):
+        raise HTTPException(400, "Filename non valido")
+    if not filename.lower().endswith('.apk'):
+        raise HTTPException(400, "Filename deve terminare in .apk")
+
+    svc = _get_blob_service()
+    if not svc:
+        raise HTTPException(500, "Blob storage not configured")
+
+    # Verifica che il blob esista davvero
+    try:
+        container = svc.get_container_client(_container_apks)
+        blob = container.get_blob_client(filename)
+        if not blob.exists():
+            raise HTTPException(404, f"APK '{filename}' non trovato nel container")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Blob check failed: {e}")
+
+    try:
+        _write_active_apk(filename)
+        return {"ok": True, "active": filename}
+    except Exception as e:
+        raise HTTPException(500, f"Save active marker failed: {e}")
 
 
 @app.post("/api/admin/apks/upload-url")
